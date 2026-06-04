@@ -226,3 +226,37 @@ Response: {
 ---
 *Last Updated: 2025-06-04*
 *Vercel deployment verified and working*
+
+---
+
+## 🔧 BUTTON FIXES (2025-06-04)
+
+### Issues Reported by User:
+1. "Open" button not opening new tabs
+2. "Open Website" button in modal not working
+3. Category buttons not responding
+4. Platform tabs not working
+5. Quick Actions not working
+6. Quick Filters not working
+
+### Fixes Applied:
+1. **Added `safeOpenUrl` function** - Works around popup blockers by:
+   - First trying `window.open()` directly
+   - If blocked, creates a temporary `<a>` element and clicks it
+   
+2. **Replaced all `window.open(tool.url, '_blank')`** with `safeOpenUrl(tool.url)`
+
+3. **Added toast notifications** to all interactive buttons for feedback:
+   - Category buttons show "📁 Category: [name]"
+   - Quick Filters show "🔍 Filter: [name]"
+   - Platform tabs show "💻 Platform: [name]"
+
+### Files Modified:
+- `/home/z/my-project/src/app/page.tsx`
+
+### Commits:
+- `4a9f35d`: Fix: Add safeOpenUrl function to handle popup blockers
+- `355f343`: Fix: Add toast notifications for button clicks to debug and improve feedback
+
+---
+*Waiting for Vercel auto-deploy to complete*
