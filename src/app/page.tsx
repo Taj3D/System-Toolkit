@@ -982,6 +982,23 @@ export default function SystemToolkitDashboard() {
     localStorage.setItem('toolkit_session', JSON.stringify(newSession))
   }, [session])
   
+  // Safe URL opener - works around popup blockers
+  const safeOpenUrl = useCallback((url: string) => {
+    // Try direct window.open first
+    const newWindow = window.open(url, '_blank', 'noopener,noreferrer')
+    
+    // If blocked, create a temporary link and click it
+    if (!newWindow || newWindow.closed || typeof newWindow.closed === 'undefined') {
+      const link = document.createElement('a')
+      link.href = url
+      link.target = '_blank'
+      link.rel = 'noopener noreferrer'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }, [])
+  
   // Login handler with enhanced security (Phase 4)
   const handleLogin = useCallback(async () => {
     // Check rate limiting
@@ -2551,7 +2568,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'w3')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2691,7 +2708,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'm2')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2706,7 +2723,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'm1')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2721,7 +2738,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'm14')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2755,7 +2772,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'l2')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2770,7 +2787,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'l4')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2785,7 +2802,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'l6')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2819,7 +2836,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'a1')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2834,7 +2851,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'a4')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2849,7 +2866,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'a8')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2883,7 +2900,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'i1')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2898,7 +2915,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'i3')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2913,7 +2930,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'i7')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2928,7 +2945,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'i6')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2962,7 +2979,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'c1')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2977,7 +2994,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'c3')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -2992,7 +3009,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'c8')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -3007,7 +3024,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'c2')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -3022,7 +3039,7 @@ export default function SystemToolkitDashboard() {
                       const tool = TOOLS.find(t => t.id === 'c9')
                       if (tool) {
                         trackToolView(tool.id)
-                        window.open(tool.url, '_blank')
+                        safeOpenUrl(tool.url)
                       }
                     }}
                   >
@@ -3318,7 +3335,7 @@ export default function SystemToolkitDashboard() {
                             variant="outline"
                             onClick={() => {
                               trackToolView(tool.id)
-                              window.open(tool.url, '_blank')
+                              safeOpenUrl(tool.url)
                             }}
                             className="h-7"
                           >
@@ -3476,7 +3493,7 @@ export default function SystemToolkitDashboard() {
                         size="sm"
                         onClick={() => {
                           trackToolView(tool.id)
-                          window.open(tool.url, '_blank')
+                          safeOpenUrl(tool.url)
                         }}
                       >
                         <ExternalLink className="w-4 h-4 mr-1" />
@@ -3771,7 +3788,7 @@ export default function SystemToolkitDashboard() {
                   variant="outline"
                   onClick={() => {
                     if (selectedScriptTool) {
-                      window.open(selectedScriptTool.url, '_blank')
+                      safeOpenUrl(selectedScriptTool.url)
                     }
                   }}
                 >
@@ -4340,7 +4357,7 @@ export default function SystemToolkitDashboard() {
                             const tool = TOOLS.find(t => t.id === installProgress.toolId)
                             if (tool) {
                               trackToolView(tool.id)
-                              window.open(tool.url, '_blank')
+                              safeOpenUrl(tool.url)
                             }
                           }}
                         >
