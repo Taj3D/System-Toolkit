@@ -35,9 +35,9 @@ import {
   Moon, Sun, Monitor, Trash2, Download, Settings, Info, AlertTriangle,
   Terminal, Cpu, HardDrive, Wifi, Battery, Globe, Smartphone, Tablet,
   ChevronUp, Heart, Bookmark, Share2, RefreshCw, Clock, User, LogOut,
-  KeyRound, Fingerprint, Sparkles, Award, TrendingUp,
+  KeyRound, Fingerprint, Sparkles, TrendingUp,
   Laptop, Play, Pause, RotateCcw, CheckCircle2, XCircle, Loader2, Keyboard,
-  Grid, List, SortAsc, Filter, X, Plus, Minus, ChevronDown, MoreVertical, Eye, EyeOff, Menu
+  Grid, List, SortAsc, Filter, X, Plus, MoreVertical, Eye, EyeOff, Menu
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
