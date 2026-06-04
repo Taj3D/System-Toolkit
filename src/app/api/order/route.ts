@@ -1,15 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import nodemailer from 'nodemailer';
 
 // ============ GOOGLE SHEETS CONFIGURATION ============
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
 
-// ============ BREVO SMTP CONFIGURATION ============
-const SMTP_HOST = process.env.SMTP_HOST || 'smtp-relay.brevo.com';
-const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
-const SMTP_USER = process.env.SMTP_USER || 'ad9b67001@smtp-brevo.com';
-const SMTP_PASS = process.env.SMTP_PASS || '6hzbQEZBgU7SFCt8';
+// ============ BREVO API CONFIGURATION ============
+const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
 const EMAIL_FROM = process.env.EMAIL_FROM || 'conceptbd.net@gmail.com';
 
 // ============ PLAN NAMES ============
@@ -17,19 +13,6 @@ const PLAN_NAMES: Record<string, string> = {
   basic: 'বেসিক',
   professional: 'প্রফেশনাল',
   enterprise: 'এন্টারপ্রাইজ'
-};
-
-// ============ EMAIL TRANSPORTER ============
-const createTransporter = () => {
-  return nodemailer.createTransport({
-    host: SMTP_HOST,
-    port: SMTP_PORT,
-    secure: false,
-    auth: {
-      user: SMTP_USER,
-      pass: SMTP_PASS
-    }
-  });
 };
 
 // ============ GOOGLE SHEETS FUNCTIONS ============
@@ -80,7 +63,7 @@ async function sendToGoogleSheets(order: {
   }
 }
 
-// ============ EMAIL FUNCTIONS ============
+// ============ EMAIL FUNCTIONS (BREVO API) ============
 async function sendWelcomeEmail(order: {
   id: string;
   name: string;
@@ -89,8 +72,8 @@ async function sendWelcomeEmail(order: {
   plan: string;
   amount: number;
 }) {
-  if (!order.email) {
-    console.log('⚠️ No email provided, skipping email');
+  if (!order.email || !BREVO_API_KEY) {
+    console.log('⚠️ No email or API key, skipping email');
     return false;
   }
 
@@ -102,7 +85,6 @@ async function sendWelcomeEmail(order: {
     <head>
       <meta charset="UTF-8">
       <style>
-        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
         body { font-family: 'Hind Siliguri', Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
         .container { max-width: 600px; margin: 0 auto; padding: 20px; }
         .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
@@ -125,16 +107,16 @@ async function sendWelcomeEmail(order: {
             <h1>🎉 অর্ডার সফল!</h1>
             <p>আপনার অর্ডার গৃহীত হয়েছে</p>
           </div>
-          
+
           <div class="content">
             <p style="font-size: 16px; color: #333;">
               প্রিয় <strong>${order.name}</strong>,
             </p>
-            
+
             <p style="color: #555; line-height: 1.8;">
               আপনার <strong>System Toolkit</strong> অর্ডার সফলভাবে গৃহীত হয়েছে। পেমেন্ট সম্পন্ন করার পর ১ ঘন্টার মধ্যে আপনি সফটওয়্যার অ্যাক্সেস পাবেন।
             </p>
-            
+
             <div class="order-box">
               <h3 style="margin: 0 0 15px 0; color: #667eea;">📦 অর্ডার বিবরণ</h3>
               <div class="order-row">
@@ -158,7 +140,7 @@ async function sendWelcomeEmail(order: {
                 <strong>${order.email}</strong>
               </div>
             </div>
-            
+
             <div class="payment-box">
               <p style="margin: 0; color: #856404;">
                 <strong>📱 পেমেন্ট পদ্ধতি:</strong><br>
@@ -166,15 +148,15 @@ async function sendWelcomeEmail(order: {
                 পেমেন্ট করুন এবং স্ক্রিনশট WhatsApp এ পাঠান।
               </p>
             </div>
-            
+
             <div style="text-align: center;">
-              <a href="https://wa.me/8801711731354?text=${encodeURIComponent('হ্যালো, আমি অর্ডার কনফার্ম করতে চাই। অর্ডার আইডি: #' + order.id.slice(-8).toUpperCase())}" 
+              <a href="https://wa.me/8801711731354?text=${encodeURIComponent('হ্যালো, আমি অর্ডার কনফার্ম করতে চাই। অর্ডার আইডি: #' + order.id.slice(-8).toUpperCase())}"
                  class="whatsapp-btn">
                 💬 WhatsApp এ যোগাযোগ করুন
               </a>
             </div>
           </div>
-          
+
           <div class="footer">
             <p>© 2025 NextGen Digital Studio | <a href="https://www.facebook.com/nextgendigitalstudio" style="color: #667eea;">Facebook</a></p>
           </div>
@@ -185,17 +167,39 @@ async function sendWelcomeEmail(order: {
   `;
 
   try {
-    const transporter = createTransporter();
-    
-    const info = await transporter.sendMail({
-      from: `"System Toolkit" <${EMAIL_FROM}>`,
-      to: order.email,
-      subject: '🎉 অর্ডার সফল - System Toolkit',
-      html: emailHtml
+    // Brevo API (Sendinblue)
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'api-key': BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: {
+          name: 'System Toolkit',
+          email: EMAIL_FROM
+        },
+        to: [
+          {
+            email: order.email,
+            name: order.name
+          }
+        ],
+        subject: '🎉 অর্ডার সফল - System Toolkit',
+        htmlContent: emailHtml
+      })
     });
 
-    console.log('✅ Welcome email sent! Message ID:', info.messageId);
-    return true;
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Welcome email sent! Message ID:', result.messageId);
+      return true;
+    } else {
+      const errorText = await response.text();
+      console.error('⚠️ Email failed:', errorText);
+      return false;
+    }
   } catch (error) {
     console.error('⚠️ Email error:', error);
     return false;
@@ -251,7 +255,7 @@ export async function POST(request: NextRequest) {
       createdAt: orderDate
     });
 
-    // Send welcome email via Brevo SMTP
+    // Send welcome email via Brevo API
     let emailSent = false;
     if (email) {
       emailSent = await sendWelcomeEmail({
