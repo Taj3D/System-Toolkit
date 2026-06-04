@@ -29,14 +29,14 @@ import {
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
-import { 
-  Lock, Unlock, Shield, Zap, Star, ExternalLink, Copy, Check, Search, 
+import {
+  Lock, Unlock, Shield, Zap, Star, ExternalLink, Copy, Check, Search,
   Moon, Sun, Monitor, Trash2, Download, Settings, Info, AlertTriangle,
   Terminal, Cpu, HardDrive, Wifi, Battery, Globe, Smartphone, Tablet,
   ChevronUp, Heart, Bookmark, Share2, RefreshCw, Clock, User, LogOut,
   KeyRound, Fingerprint, Sparkles, Award, TrendingUp,
   Laptop, Play, Pause, RotateCcw, CheckCircle2, XCircle, Loader2, Keyboard,
-  Grid, List, SortAsc, Filter, X, Plus, Minus, ChevronDown, MoreVertical
+  Grid, List, SortAsc, Filter, X, Plus, Minus, ChevronDown, MoreVertical, Eye
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -204,6 +204,10 @@ export default function SystemToolkitDashboard() {
   const [passwordInput, setPasswordInput] = useState('')
   const [loginError, setLoginError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
+  const [loginAttempts, setLoginAttempts] = useState(0)
+  const [isLockedOut, setIsLockedOut] = useState(false)
+  const [lockoutEndTime, setLockoutEndTime] = useState<number | null>(null)
+  const [showSessionWarning, setShowSessionWarning] = useState(false)
   
   // UI State
   const [activeTab, setActiveTab] = useState('windows')
@@ -405,6 +409,46 @@ export default function SystemToolkitDashboard() {
     return () => clearInterval(interval)
   }, [session, handleLogout])
   
+  // Session timeout warning (5 minutes before expiry)
+  useEffect(() => {
+    if (!session) return
+    
+    const warningInterval = setInterval(() => {
+      const storedSession = localStorage.getItem('toolkit_session')
+      if (storedSession) {
+        try {
+          const parsed = JSON.parse(storedSession) as UserSession
+          const timeLeft = SESSION_TIMEOUT_MS - (Date.now() - parsed.lastActivity)
+          const fiveMinutes = 5 * 60 * 1000
+          
+          if (timeLeft < fiveMinutes && timeLeft > 0) {
+            setShowSessionWarning(true)
+          } else {
+            setShowSessionWarning(false)
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }, 60000) // Check every minute
+    
+    return () => clearInterval(warningInterval)
+  }, [session])
+  
+  // Extend session function
+  const extendSession = useCallback(() => {
+    if (session) {
+      const newSession = { ...session, lastActivity: Date.now() }
+      setSession(newSession)
+      localStorage.setItem('toolkit_session', JSON.stringify(newSession))
+      setShowSessionWarning(false)
+      toast({
+        title: '⏰ Session Extended',
+        description: 'Your session has been extended for another 30 minutes'
+      })
+    }
+  }, [session, toast])
+  
   // Toggle theme - defined early as it's used in keyboard shortcuts
   const toggleTheme = useCallback(() => {
     setIsDarkMode(prev => {
@@ -475,6 +519,20 @@ export default function SystemToolkitDashboard() {
   
   // Login handler
   const handleLogin = useCallback(async () => {
+    // Check if locked out
+    if (isLockedOut && lockoutEndTime && Date.now() < lockoutEndTime) {
+      const remainingSeconds = Math.ceil((lockoutEndTime - Date.now()) / 1000)
+      setLoginError(`Too many failed attempts. Try again in ${remainingSeconds} seconds.`)
+      return
+    }
+    
+    // Reset lockout if time has passed
+    if (lockoutEndTime && Date.now() >= lockoutEndTime) {
+      setIsLockedOut(false)
+      setLockoutEndTime(null)
+      setLoginAttempts(0)
+    }
+    
     setIsLoading(true)
     setLoginError('')
     
@@ -489,21 +547,38 @@ export default function SystemToolkitDashboard() {
       }
       setSession(newSession)
       localStorage.setItem('toolkit_session', JSON.stringify(newSession))
+      setLoginAttempts(0) // Reset attempts on successful login
       toast({
         title: '🔓 Login Successful',
         description: 'Welcome to System Toolkit Dashboard'
       })
     } else {
-      setLoginError('Invalid password. Please try again.')
-      toast({
-        variant: 'destructive',
-        title: '❌ Login Failed',
-        description: 'Invalid credentials'
-      })
+      const newAttempts = loginAttempts + 1
+      setLoginAttempts(newAttempts)
+      
+      // Lock out after 5 failed attempts
+      if (newAttempts >= 5) {
+        const lockoutTime = Date.now() + (30 * 1000) // 30 second lockout
+        setIsLockedOut(true)
+        setLockoutEndTime(lockoutTime)
+        setLoginError('Too many failed attempts. Please wait 30 seconds.')
+        toast({
+          variant: 'destructive',
+          title: '🔒 Account Temporarily Locked',
+          description: 'Too many failed login attempts. Please wait 30 seconds.'
+        })
+      } else {
+        setLoginError(`Invalid password. ${5 - newAttempts} attempts remaining.`)
+        toast({
+          variant: 'destructive',
+          title: '❌ Login Failed',
+          description: `Invalid credentials. ${5 - newAttempts} attempts remaining.`
+        })
+      }
     }
     
     setIsLoading(false)
-  }, [passwordInput, toast])
+  }, [passwordInput, toast, loginAttempts, isLockedOut, lockoutEndTime])
   
   // Toggle favorite
   const toggleFavorite = useCallback((toolId: string) => {
@@ -1290,8 +1365,19 @@ export default function SystemToolkitDashboard() {
                       isDarkMode 
                         ? 'bg-gray-800/50 border-gray-700 placeholder:text-gray-500' 
                         : 'bg-gray-50 border-gray-200 placeholder:text-gray-400'
-                    }`}
+                    } ${searchQuery ? 'pr-10' : ''}`}
                   />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className={`absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 ${
+                        isDarkMode ? 'text-gray-500 hover:text-gray-300' : 'text-gray-400 hover:text-gray-600'
+                      } transition-colors`}
+                      aria-label="Clear search"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
               
@@ -1424,6 +1510,42 @@ export default function SystemToolkitDashboard() {
           </div>
         </header>
         
+        {/* Session Timeout Warning Banner */}
+        {showSessionWarning && (
+          <div className={`sticky top-16 z-40 mx-4 mt-2 p-3 rounded-lg border animate-pulse ${
+            isDarkMode 
+              ? 'bg-yellow-900/30 border-yellow-500/50 text-yellow-200' 
+              : 'bg-yellow-50 border-yellow-300 text-yellow-800'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-500" />
+                <span className="text-sm font-medium">
+                  Your session will expire soon due to inactivity
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className={isDarkMode ? 'border-yellow-500/50 text-yellow-200 hover:bg-yellow-600/20' : 'border-yellow-300 text-yellow-700 hover:bg-yellow-100'}
+                  onClick={extendSession}
+                >
+                  Extend Session
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className={isDarkMode ? 'text-yellow-200' : 'text-yellow-700'}
+                  onClick={() => setShowSessionWarning(false)}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        
         {/* Main Content */}
         <main className="flex-1 container mx-auto px-4 py-6">
           {/* Platform Tabs */}
@@ -1521,6 +1643,198 @@ export default function SystemToolkitDashboard() {
                   >
                     <Shield className="w-4 h-4 mr-2" />
                     Privacy Settings
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Quick Actions - macOS */}
+            {activeTab === 'macos' && (
+              <div className={`mb-4 p-4 rounded-xl border ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-gray-800/50 to-gray-700/50 border-gray-600/30' 
+                  : 'bg-gradient-to-r from-gray-50 to-gray-100 border-gray-300'
+              }`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-semibold flex items-center gap-2 ${
+                    isDarkMode ? 'text-gray-300' : 'text-gray-700'
+                  }`}>
+                    <Laptop className="w-4 h-4" />
+                    Quick Actions - macOS
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700"
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'm2')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Terminal className="w-4 h-4 mr-2" />
+                    Install Homebrew
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-gray-500/50 text-gray-300 hover:bg-gray-600/20' : 'border-gray-300 text-gray-600 hover:bg-gray-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'm1')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    AppCleaner
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-purple-500/50 text-purple-300 hover:bg-purple-600/20' : 'border-purple-300 text-purple-600 hover:bg-purple-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'm14')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Grid className="w-4 h-4 mr-2" />
+                    Rectangle
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Quick Actions - Linux */}
+            {activeTab === 'linux' && (
+              <div className={`mb-4 p-4 rounded-xl border ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-orange-900/20 to-yellow-900/20 border-orange-500/30' 
+                  : 'bg-gradient-to-r from-orange-50 to-yellow-50 border-orange-200'
+              }`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-semibold flex items-center gap-2 ${
+                    isDarkMode ? 'text-orange-300' : 'text-orange-700'
+                  }`}>
+                    <Terminal className="w-4 h-4" />
+                    Quick Actions - Linux
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-orange-600 to-yellow-600 hover:from-orange-700 hover:to-yellow-700"
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'l2')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Settings className="w-4 h-4 mr-2" />
+                    Stacer Optimizer
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-orange-500/50 text-orange-300 hover:bg-orange-600/20' : 'border-orange-300 text-orange-600 hover:bg-orange-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'l4')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Timeshift Backup
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-green-500/50 text-green-300 hover:bg-green-600/20' : 'border-green-300 text-green-600 hover:bg-green-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'l6')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Monitor className="w-4 h-4 mr-2" />
+                    htop Monitor
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Quick Actions - Android */}
+            {activeTab === 'android' && (
+              <div className={`mb-4 p-4 rounded-xl border ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-green-900/20 to-emerald-900/20 border-green-500/30' 
+                  : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
+              }`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-semibold flex items-center gap-2 ${
+                    isDarkMode ? 'text-green-300' : 'text-green-700'
+                  }`}>
+                    <Smartphone className="w-4 h-4" />
+                    Quick Actions - Android
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'a1')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    SD Maid SE
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-green-500/50 text-green-300 hover:bg-green-600/20' : 'border-green-300 text-green-600 hover:bg-green-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'a4')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Terminal className="w-4 h-4 mr-2" />
+                    Termux
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-purple-500/50 text-purple-300 hover:bg-purple-600/20' : 'border-purple-300 text-purple-600 hover:bg-purple-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'a8')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <KeyRound className="w-4 h-4 mr-2" />
+                    Magisk
                   </Button>
                 </div>
               </div>
@@ -1677,7 +1991,7 @@ export default function SystemToolkitDashboard() {
                   key={tool.id}
                   role="article"
                   aria-label={tool.name}
-                  className={`relative overflow-hidden transition-all ${
+                  className={`relative overflow-hidden transition-all duration-300 ${
                     viewMode === 'list' 
                       ? 'flex flex-row items-center gap-4 p-4 hover:shadow-md border-l-4 ' + 
                         (tool.isFeatured 
@@ -2072,8 +2386,8 @@ export default function SystemToolkitDashboard() {
           </Tabs>
         </main>
         
-        {/* Footer */}
-        <footer className={`py-4 border-t ${
+        {/* Footer - Sticky to bottom */}
+        <footer className={`mt-auto py-4 border-t ${
           isDarkMode ? 'bg-gray-900/80 border-gray-800' : 'bg-white/80 border-gray-200'
         }`}>
           <div className="container mx-auto px-4">
@@ -2792,30 +3106,95 @@ export default function SystemToolkitDashboard() {
                   
                   {/* Action Button */}
                   {installProgress.status === 'completed' && (
-                    <div className="flex gap-2">
-                      <Button
-                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                        onClick={() => {
-                          setShowAutoInstallModal(false)
-                          setInstallProgress(null)
-                        }}
-                      >
-                        <CheckCircle2 className="w-4 h-4 mr-2" />
-                        Done
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          const tool = TOOLS.find(t => t.id === installProgress.toolId)
-                          if (tool) {
-                            trackToolView(tool.id)
-                            window.open(tool.url, '_blank')
-                          }
-                        }}
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Open Website
-                      </Button>
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <Button
+                          className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                          onClick={() => {
+                            setShowAutoInstallModal(false)
+                            setInstallProgress(null)
+                          }}
+                        >
+                          <CheckCircle2 className="w-4 h-4 mr-2" />
+                          Done
+                        </Button>
+                        <Button
+                          variant="outline"
+                          onClick={() => {
+                            const tool = TOOLS.find(t => t.id === installProgress.toolId)
+                            if (tool) {
+                              trackToolView(tool.id)
+                              window.open(tool.url, '_blank')
+                            }
+                          }}
+                        >
+                          <ExternalLink className="w-4 h-4 mr-2" />
+                          Open Website
+                        </Button>
+                      </div>
+                      
+                      {/* Auto-Uninstall Simulation */}
+                      <div className={`p-3 rounded-lg border ${
+                        isDarkMode ? 'bg-yellow-900/20 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'
+                      }`}>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <RotateCcw className={`w-4 h-4 ${isDarkMode ? 'text-yellow-400' : 'text-yellow-600'}`} />
+                            <span className={`text-sm ${isDarkMode ? 'text-yellow-300' : 'text-yellow-700'}`}>
+                              Auto-Uninstall after task
+                            </span>
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className={isDarkMode ? 'border-yellow-500/50 text-yellow-300 hover:bg-yellow-600/20' : 'border-yellow-300 text-yellow-600 hover:bg-yellow-100'}
+                            onClick={async () => {
+                              const tool = TOOLS.find(t => t.id === installProgress.toolId)
+                              if (!tool) return
+                              
+                              // Simulate uninstall
+                              setInstallProgress({
+                                toolId: tool.id,
+                                status: 'preparing',
+                                progress: 0,
+                                message: 'Preparing uninstall...'
+                              })
+                              
+                              const uninstallSteps = [
+                                { progress: 25, message: 'Stopping processes...' },
+                                { progress: 50, message: 'Removing files...' },
+                                { progress: 75, message: 'Cleaning registry...' },
+                                { progress: 100, message: 'Uninstall complete!' }
+                              ]
+                              
+                              for (const step of uninstallSteps) {
+                                await new Promise(resolve => setTimeout(resolve, 800))
+                                setInstallProgress(prev => prev ? {
+                                  ...prev,
+                                  progress: step.progress,
+                                  message: step.message
+                                } : null)
+                              }
+                              
+                              toast({
+                                title: '🗑️ Auto-Uninstall Complete',
+                                description: `${tool.name} has been removed from your system`
+                              })
+                              
+                              setTimeout(() => {
+                                setShowAutoInstallModal(false)
+                                setInstallProgress(null)
+                              }, 1500)
+                            }}
+                          >
+                            <Trash2 className="w-3 h-3 mr-1" />
+                            Uninstall
+                          </Button>
+                        </div>
+                        <p className={`text-xs mt-2 ${isDarkMode ? 'text-yellow-400/70' : 'text-yellow-600'}`}>
+                          ⚡ Simulates automatic cleanup after task completion
+                        </p>
+                      </div>
                     </div>
                   )}
                 </>
