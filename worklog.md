@@ -260,3 +260,38 @@ Response: {
 
 ---
 *Waiting for Vercel auto-deploy to complete*
+
+---
+
+## 📋 BUSINESS INFORMATION (2025-06-04)
+
+### Company Details:
+```
+Company: NextGen Digital Studio
+Facebook: https://www.facebook.com/nextgendigitalstudio
+Founder & CEO: Md. Najmul Islam Taj
+Address: NewMarket, Jessore Sadar Bangladesh
+Email: conceptbd.net@gmail.com
+Phone: +880 1711-731354 (Bkash, Nagad Personal)
+```
+
+---
+
+## 🚀 LANDING PAGE CREATION (2025-06-04)
+
+### Changes Made:
+1. ✅ Created `/src/app/dashboard/` folder
+2. ✅ Copied current dashboard to `/src/app/dashboard/page.tsx`
+3. 🔄 Creating new landing page at `/src/app/page.tsx`
+
+### New Structure:
+```
+/ (root)           → 🎯 Landing Page (Sales)
+/dashboard         → 🛠️ Software Dashboard (115 tools)
+```
+
+### Important Notes:
+- Dashboard remains fully functional at `/dashboard`
+- All 115 tools preserved
+- All features preserved (authentication, favorites, collections, etc.)
+- Landing page will drive sales to the software
