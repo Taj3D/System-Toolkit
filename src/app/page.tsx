@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -393,8 +393,8 @@ export default function SystemToolkitDashboard() {
   // Password visibility state
   const [showPassword, setShowPassword] = useState(false)
   
-  // Logout flag to prevent race condition
-  const isLoggingOut = useState(false)
+  // Logout flag to prevent race condition - using ref for immediate value
+  const isLoggingOutRef = useRef(false)
   
   // Phase 7: Enhanced Auto-Install & Script Management State
   const [scriptFavorites, setScriptFavorites] = useState<string[]>([])
@@ -457,9 +457,15 @@ export default function SystemToolkitDashboard() {
   
   // Check session on mount
   useEffect(() => {
+    // Don't restore session if we're logging out
+    if (isLoggingOutRef.current) {
+      setIsLoadingSession(false)
+      return
+    }
+    
     try {
       const savedSession = localStorage.getItem('toolkit_session')
-      if (savedSession) {
+      if (savedSession && !isLoggingOutRef.current) {
         try {
           const parsed = JSON.parse(savedSession) as UserSession
           // Validate parsed object has required fields
@@ -808,24 +814,39 @@ export default function SystemToolkitDashboard() {
   
   // Logout handler - defined first as it's used in useEffect
   const handleLogout = useCallback(() => {
-    // Set flag first to prevent race condition
-    isLoggingOut[1](true)
-    // Clear session
-    setSession(null)
-    // Remove from localStorage
+    // Set flag FIRST to prevent any re-renders from restoring session
+    isLoggingOutRef.current = true
+    
+    // Clear localStorage FIRST before state updates
     localStorage.removeItem('toolkit_session')
+    
+    // Clear session state
+    setSession(null)
+    
     // Reset password input
     setPasswordInput('')
+    
+    // Clear any cached data
+    setFavorites([])
+    setCollections([])
+    setRecentlyViewed([])
+    setToolViewCounts({})
+    setHistory([])
+    setScriptHistory([])
+    setScriptFavorites([])
+    setSelectedTools([])
+    
     // Show toast
     toast({
       title: '🔒 Logged Out',
       description: 'Session ended successfully'
     })
-    // Reset flag after a short delay
+    
+    // Reset flag after a short delay to allow navigation
     setTimeout(() => {
-      isLoggingOut[1](false)
-    }, 100)
-  }, [toast, isLoggingOut])
+      isLoggingOutRef.current = false
+    }, 500)
+  }, [toast])
   
   // Activity tracking
   useEffect(() => {
@@ -950,7 +971,7 @@ export default function SystemToolkitDashboard() {
   // Update activity - with race condition protection
   const updateActivity = useCallback(() => {
     // Don't update if logging out or no session
-    if (isLoggingOut[0] || !session) return
+    if (isLoggingOutRef.current || !session) return
     
     // Check localStorage first to ensure session exists
     const storedSession = localStorage.getItem('toolkit_session')
@@ -959,7 +980,7 @@ export default function SystemToolkitDashboard() {
     const newSession = { ...session, lastActivity: Date.now() }
     setSession(newSession)
     localStorage.setItem('toolkit_session', JSON.stringify(newSession))
-  }, [session, isLoggingOut])
+  }, [session])
   
   // Login handler with enhanced security (Phase 4)
   const handleLogin = useCallback(async () => {
@@ -1490,15 +1511,69 @@ export default function SystemToolkitDashboard() {
     ).slice(0, 4)
   }, [])
   
-  // Execute script simulation (moved here to fix dependency order - Phase 4)
-  const executeScript = useCallback((tool: Tool) => {
+  // Execute script - calls the API for real execution
+  const executeScript = useCallback(async (tool: Tool) => {
     updateActivity()
     if (!tool.scriptCommand) return
     
     trackToolView(tool.id)
     setSelectedScriptTool(tool)
     setShowScriptModal(true)
-  }, [updateActivity, trackToolView])
+    
+    // Set initial loading state
+    setExecutingScript(tool.id)
+    setScriptProgress(0)
+    
+    try {
+      // Call the execute API
+      const response = await fetch('/api/execute', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          command: tool.scriptCommand,
+          toolId: tool.id,
+          toolName: tool.name,
+          platform: tool.platform,
+          autoUninstall: true
+        })
+      })
+      
+      const data = await response.json()
+      
+      // Update progress to 100%
+      setScriptProgress(100)
+      setExecutingScript(null)
+      
+      if (data.success) {
+        // Store the instructions in the selected tool for display
+        setSelectedScriptTool({
+          ...tool,
+          scriptInstructions: data.output?.split('\n') || []
+        })
+        
+        toast({
+          title: '📋 Instructions Ready!',
+          description: 'Follow the steps below to complete the task'
+        })
+      } else {
+        toast({
+          variant: 'destructive',
+          title: '❌ Execution Failed',
+          description: data.message || 'Could not process the command'
+        })
+      }
+    } catch (error) {
+      setExecutingScript(null)
+      setScriptProgress(0)
+      toast({
+        variant: 'destructive',
+        title: '❌ Network Error',
+        description: 'Could not connect to the execution service'
+      })
+    }
+  }, [updateActivity, trackToolView, toast])
   
   // Phase 10: Run script with confirmation for risky scripts
   const runScriptWithConfirmation = useCallback((tool: Tool) => {
