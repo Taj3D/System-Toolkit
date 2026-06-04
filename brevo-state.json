@@ -1,0 +1,555 @@
+{
+  "cookies": [
+    {
+      "name": "_GRECAPTCHA",
+      "value": "09AKhCRwhHFv_wIHnzU67XwwFfu6CxWXG9Nxf0uYe-_W8I3RMXrWXuYAhqAYFmXFAwKo54eImmbyEw6cEaz_sLx6o",
+      "domain": "www.google.com",
+      "path": "/recaptcha",
+      "expires": 1796156575.282155,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "tmpl_lang",
+      "value": "en",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1815164576.93498,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "country",
+      "value": "US",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1815164576.935144,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "visitorId",
+      "value": "4bedb2b9bcde460a5729d6ff3d79b1d9",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1812140571,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "anonymous_id",
+      "value": "a5b3eb24-ae5e-458c-b5b0-d52769bd98af",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1812140571,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "first_referrer",
+      "value": "https://app.brevo.com/",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1802204571,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "_V2rdfanSBjFByEhHQS7SpPMoFopstj4JlOSx7yZ61M-1780604571.9041822-1.0.1.1-OlogKCtgHToSjtXPC0cqutL.w25.8Kp5dvdUu26VmIBomF1v86wUQgMkAU689oSqnbriqQ2xuPu6J5auZHbBjg5rx7n_kcSnnIvU7k5aM8VvUXJi3xhfPDmm7slpFxGR",
+      "domain": ".bzrcdn.openai.com",
+      "path": "/",
+      "expires": 1780606371.913075,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "pscd",
+      "value": "get.brevo.com",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1788380576,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "MUID",
+      "value": "308D251ADBB669401BE53274DAE768E1",
+      "domain": ".bing.com",
+      "path": "/",
+      "expires": 1814300574.100408,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "MR",
+      "value": "0",
+      "domain": ".bat.bing.com",
+      "path": "/",
+      "expires": 1781209373.085521,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_plantrack",
+      "value": "%257B%2522email%2522%253A%2522undefined%2522%257D",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1812140576.99017,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "_ttp",
+      "value": "3EgeK891MynVlNioxVeaa4zlqDN",
+      "domain": ".tiktok.com",
+      "path": "/",
+      "expires": 1814300572.133861,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "CLID",
+      "value": "c6f3e402f30d4bd6a78ea0b3df73b759.20260604.20270604",
+      "domain": "www.clarity.ms",
+      "path": "/",
+      "expires": 1812140572.154112,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_tt_enable_cookie",
+      "value": "1",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1814300572,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ttp",
+      "value": "01KTA4V4HJ84D2EXQRFY8FX1B4_.tt.1",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1814300572,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "li_sugr",
+      "value": "8b2c79f1-8b79-4733-b4f3-32eb5dd51fac",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1788380577.273317,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_clck",
+      "value": "zcuuza%5E2%5Eg6m%5E1%5E2346",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1812140572,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "lidc",
+      "value": "\"b=VGST08:s=V:r=V:a=V:p=V:g=3448:u=1:x=1:i=1780604572:t=1780690972:v=2:sig=AQH4Ov5sSIuBBdEgt4uB2mfYoeJcwXcg\"",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1780690973.31635,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "UserMatchHistory",
+      "value": "AQLriDKfiePj4AAAAZ6UTZK6fKRv7eFghsASBADBIPohbx3m8MXTgzzypsk5SD55zPBwzmz0XWir7A",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1783196572.444839,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "AnalyticsSyncHistory",
+      "value": "AQLEoPrRByocOwAAAZ6UTZK6h-MDl7mT_zBow_2Ax7YXZkjNbDmzLsow9vcSQGIXhiGxR7gvRhoxjdny5kHzGA",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1783196572.444858,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "bcookie",
+      "value": "\"v=2&8efd377d-ecc6-42c8-8c3f-b87a395653b4\"",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1812140578.273384,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "bscookie",
+      "value": "\"v=1&20260604202252c0155663-c4aa-4515-8f16-0d6ad627e8e4AQE3WBX4_KOQQhVBz4kCGR6-RH9reoNV\"",
+      "domain": ".www.linkedin.com",
+      "path": "/",
+      "expires": 1812140572.714849,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "__cf_bm",
+      "value": "DyQCGZfbVZWtB549D12iyWa4OSy0opHKEEbZV6CgCQs-1780604572.4671462-1.0.1.1-z6PCC2jqbSwC0dJ5lWb78uvpjKWbhk3usbQHzzyial5bQm7mp8QTCwYYeUSyMXbUeJTnGc0OuUgBJgwpetOkBI.xcKyZAi0xlX5qrJ.Hjmuas1PmGRnBA4XsKq_cdSKs",
+      "domain": ".linkedin.com",
+      "path": "/",
+      "expires": 1780606372.714915,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "MR",
+      "value": "0",
+      "domain": ".c.bing.com",
+      "path": "/",
+      "expires": 1781209374.100465,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "SRM_B",
+      "value": "308D251ADBB669401BE53274DAE768E1",
+      "domain": ".c.bing.com",
+      "path": "/",
+      "expires": 1814300574.100478,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "SM",
+      "value": "C",
+      "domain": ".c.clarity.ms",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "MUID",
+      "value": "308D251ADBB669401BE53274DAE768E1",
+      "domain": ".clarity.ms",
+      "path": "/",
+      "expires": 1814300573.145938,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "MR",
+      "value": "0",
+      "domain": ".c.clarity.ms",
+      "path": "/",
+      "expires": 1781209373.145963,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ANONCHK",
+      "value": "0",
+      "domain": ".c.clarity.ms",
+      "path": "/",
+      "expires": 1780605173.145973,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ttcsid",
+      "value": "1780604572214::MxNMGMy7F6UC7rs9KPr0.1.1780604575102.0::1.-1569.0::2876.1.640.408::0.0.0",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1814300575,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "ttcsid_D5THK1RC77U7EB9GSES0",
+      "value": "1780604572214::8JsAyUeG3eqfiY4-HtnO.1.1780604575102.0",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1814300575,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "OptanonConsent",
+      "value": "isGpcEnabled=0&datestamp=Thu+Jun+04+2026+20%3A22%3A55+GMT%2B0000+(Coordinated+Universal+Time)&version=202305.1.0&browserGpcFlag=0&isIABGlobal=false&hosts=&consentId=27726b08-0916-4794-bee5-1489adc7433a&interactionCount=1&landingPath=https%3A%2F%2Flogin.brevo.com%2F%3Ftarget%3Dhttps%253A%252F%252Fapp.brevo.com%252Flogin&groups=C0004%3A1%2CC0002%3A1%2CC0003%3A1%2CC0001%3A1",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1796156575,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "loggedin",
+      "value": "true",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1781900576.353094,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_gcl_au",
+      "value": "1.1.2018088421.1780604577",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1788380577,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga",
+      "value": "GA1.1.1463623951.1780604577",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1815164576.946857,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_ga_V8SFL2N220",
+      "value": "GS2.1.s1780604576$o1$g0$t1780604576$j60$l0$h1018385719",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1815164576.966477,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_uetsid",
+      "value": "2c790600605311f19b9bb120b41e73dc",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1780690976,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_uetvid",
+      "value": "2c793400605311f1825e99bc7e2f683f",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1814300576,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "amplitude_id_46f5e53b3cbb551bf03c2812fcc078efbrevo.com",
+      "value": "eyJkZXZpY2VJZCI6Ijk0NTc2MmMyLTZiZjktNGJjMS05ZDBhLTFkZDIwYWY3OWE0OVIiLCJ1c2VySWQiOm51bGwsIm9wdE91dCI6ZmFsc2UsInNlc3Npb25JZCI6MTc4MDYwNDU3NzAwNSwibGFzdEV2ZW50VGltZSI6MTc4MDYwNDU3NzAwNiwiZXZlbnRJZCI6MCwiaWRlbnRpZnlJZCI6MSwic2VxdWVuY2VOdW1iZXIiOjF9",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1815164577.006455,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_fbp",
+      "value": "fb.1.1780604577091.922605836470947370",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1788380577,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "FPID",
+      "value": "FPID2.2.UchzCU9i50gwLYxMA0U4a66pt3%2F%2FZeHaEIIaQtx9uJk%3D.1780604577",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1815164577.186118,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "FPAU",
+      "value": "1.1.2018088421.1780604577",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1788380577.171132,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "FPLC",
+      "value": "DZGI8RZTJIZLreSiSM2p8AK4MQkq8MHbr4CGthJdFWU4ZSlSDekpqzLKEK5N5WH8RLtYnW%2BGqMkeIG0fxIyVbEThdrHZ1QXJn%2FLyVPSScz8Y22D1pE528ftIoC0BHw%3D%3D",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1780676577.186196,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "FPGSID",
+      "value": "1.1780604577.1780604577.G-V8SFL2N220.VvWKLIFnn7dbnmJxbJtSIw",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1780606377.186219,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "_clsk",
+      "value": "14la2n0%5E1780604577383%5E2%5E0%5Ee.clarity.ms%2Fcollect",
+      "domain": ".brevo.com",
+      "path": "/",
+      "expires": 1780690977,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://app.brevo.com",
+      "localStorage": [
+        {
+          "name": "inappTimeout",
+          "value": "1780604877555"
+        },
+        {
+          "name": "userpilotSDK",
+          "value": "{}"
+        },
+        {
+          "name": "amplitude_unsent_46f5e53b3cbb551bf03c2812fcc078ef",
+          "value": "[]"
+        },
+        {
+          "name": "lastExternalReferrerTime",
+          "value": "1780604577080"
+        },
+        {
+          "name": "commonbanner",
+          "value": "[]"
+        },
+        {
+          "name": "_uetvid_exp",
+          "value": "Tue, 29 Jun 2027 20:22:56 GMT"
+        },
+        {
+          "name": "userpilotSettings",
+          "value": "{\"endpoint\":\"wss://analytex-eu.userpilot.io/v0/events/websocket\",\"date\":1780604577357}"
+        },
+        {
+          "name": "_uetsid_exp",
+          "value": "Fri, 05 Jun 2026 20:22:56 GMT"
+        },
+        {
+          "name": "_uetvid",
+          "value": "2c793400605311f1825e99bc7e2f683f"
+        },
+        {
+          "name": "lastExternalReferrer",
+          "value": "other"
+        },
+        {
+          "name": "amplitude_unsent_identify_46f5e53b3cbb551bf03c2812fcc078ef",
+          "value": "[]"
+        },
+        {
+          "name": "_gcl_ls",
+          "value": "{\"schema\":\"gcl\",\"version\":1,\"gcl_ctr\":{\"value\":{\"value\":0,\"timeouts\":0,\"errors\":0,\"eopCount\":0,\"creationTimeMs\":1780604576895},\"expires\":1788380576895}}"
+        },
+        {
+          "name": "_uetsid",
+          "value": "2c790600605311f19b9bb120b41e73dc"
+        },
+        {
+          "name": "li_adsId",
+          "value": "4cceec4a-2374-452f-9fef-be2343942237"
+        }
+      ]
+    },
+    {
+      "origin": "https://login.brevo.com",
+      "localStorage": [
+        {
+          "name": "inappTimeout",
+          "value": "1780604873415"
+        },
+        {
+          "name": "userpilotSDK",
+          "value": "{}"
+        },
+        {
+          "name": "userpilotSettings",
+          "value": "{\"endpoint\":\"wss://analytex-eu.userpilot.io/v0/events/websocket\",\"date\":1780604573388}"
+        },
+        {
+          "name": "_grecaptcha",
+          "value": "09AKhCRwgyQjjWtMS1f7Qs85gLsC7Ml-CGpmyTwJfArVzyCtQA3Ieo7DLXujAFykMrT24o7nY0Dtoje7L91eNC76tW7jMEWPGMhSmYjNNA2cUIa5PmjHG7fappS0ACxpCu"
+        },
+        {
+          "name": "li_adsId",
+          "value": "e9522b0d-85f6-4416-a30e-51f59bc6c68c"
+        }
+      ]
+    },
+    {
+      "origin": "https://www.google.com",
+      "localStorage": [
+        {
+          "name": "rc::a",
+          "value": "MTJwa2RzbDEzZ3dubXQ="
+        },
+        {
+          "name": "rc::f",
+          "value": "0aAL2ClC6dOQE1Vn_l4wiqJ2AZBFdrjf9wUmd-L4uVn9qw0109KeGEKXSb4AX0tW6wgizNxnM"
+        }
+      ]
+    }
+  ]
+}
