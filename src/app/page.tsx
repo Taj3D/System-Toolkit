@@ -200,6 +200,11 @@ const TOOLS: Tool[] = [
   { id: 'c8', name: 'Bitwarden', description: 'Open source password manager.', category: 'Security', platform: 'cross-platform', url: 'https://bitwarden.com/', risk: 'safe', rating: 4.9, downloads: '50M+', tags: ['password', 'security', 'encryption'], isFeatured: true },
   { id: 'c9', name: 'ProtonVPN', description: 'Free VPN service with strong privacy.', category: 'VPN', platform: 'cross-platform', url: 'https://protonvpn.com/', risk: 'safe', rating: 4.7, downloads: '30M+', tags: ['vpn', 'privacy', 'free'] },
   { id: 'c10', name: 'KeePassXC', description: 'Cross-platform community-driven password manager.', category: 'Security', platform: 'cross-platform', url: 'https://keepassxc.org/', risk: 'safe', rating: 4.8, downloads: '10M+', tags: ['password', 'offline', 'security'] },
+  { id: 'c11', name: 'PeaZip', description: 'Free file archiver utility for all major archive formats.', category: 'Utilities', platform: 'cross-platform', url: 'https://peazip.github.io/', risk: 'safe', rating: 4.6, downloads: '5M+', tags: ['archive', 'compression', 'free'], isNew: true },
+  { id: 'c12', name: 'Joplin', description: 'Open source note-taking and to-do application.', category: 'Productivity', platform: 'cross-platform', url: 'https://joplinapp.org/', risk: 'safe', rating: 4.7, downloads: '5M+', tags: ['notes', 'todo', 'open-source'], isNew: true },
+  { id: 'c13', name: 'ONLYOFFICE', description: 'Free office suite for documents, spreadsheets, presentations.', category: 'Productivity', platform: 'cross-platform', url: 'https://www.onlyoffice.com/', risk: 'safe', rating: 4.5, downloads: '15M+', tags: ['office', 'documents', 'free'], isNew: true },
+  { id: 'c14', name: 'LibreOffice', description: 'Free and powerful open source office suite.', category: 'Productivity', platform: 'cross-platform', url: 'https://www.libreoffice.org/', risk: 'safe', rating: 4.6, downloads: '50M+', tags: ['office', 'documents', 'open-source'] },
+  { id: 'c15', name: 'Audacity', description: 'Free, open source, cross-platform audio editor.', category: 'Media', platform: 'cross-platform', url: 'https://www.audacityteam.org/', risk: 'safe', rating: 4.7, downloads: '100M+', tags: ['audio', 'editor', 'recording'], isFeatured: true },
 ]
 
 // ============ MAIN COMPONENT ============
@@ -513,7 +518,7 @@ export default function SystemToolkitDashboard() {
     
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [session])
+  }, [session, toggleTheme])
   
   // Update activity
   const updateActivity = useCallback(() => {
@@ -1603,7 +1608,7 @@ export default function SystemToolkitDashboard() {
                 <div className="flex flex-wrap gap-2">
                   <Button
                     size="sm"
-                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transition-all duration-200 hover:scale-105 active:scale-95"
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w1')
                       if (tool) startAutoInstall(tool)
@@ -1883,6 +1888,179 @@ export default function SystemToolkitDashboard() {
               </div>
             )}
             
+            {/* Quick Actions - iOS */}
+            {activeTab === 'ios' && (
+              <div className={`mb-4 p-4 rounded-xl border ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500/30' 
+                  : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
+              }`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-semibold flex items-center gap-2 ${
+                    isDarkMode ? 'text-purple-300' : 'text-purple-700'
+                  }`}>
+                    <Tablet className="w-4 h-4" />
+                    Quick Actions - iOS
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'i1')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    AltStore
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-purple-500/50 text-purple-300 hover:bg-purple-600/20' : 'border-purple-300 text-purple-600 hover:bg-purple-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'i3')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    TrollStore
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-pink-500/50 text-pink-300 hover:bg-pink-600/20' : 'border-pink-300 text-pink-600 hover:bg-pink-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'i7')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <HardDrive className="w-4 h-4 mr-2" />
+                    iMazing
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-cyan-500/50 text-cyan-300 hover:bg-cyan-600/20' : 'border-cyan-300 text-cyan-600 hover:bg-cyan-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'i6')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <KeyRound className="w-4 h-4 mr-2" />
+                    Dopamine JB
+                  </Button>
+                </div>
+              </div>
+            )}
+            
+            {/* Quick Actions - Cross Platform */}
+            {activeTab === 'cross-platform' && (
+              <div className={`mb-4 p-4 rounded-xl border ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-indigo-900/20 to-blue-900/20 border-indigo-500/30' 
+                  : 'bg-gradient-to-r from-indigo-50 to-blue-50 border-indigo-200'
+              }`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-semibold flex items-center gap-2 ${
+                    isDarkMode ? 'text-indigo-300' : 'text-indigo-700'
+                  }`}>
+                    <Globe className="w-4 h-4" />
+                    Quick Actions - Cross Platform
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700"
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'c1')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <HardDrive className="w-4 h-4 mr-2" />
+                    Ventoy USB
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/20' : 'border-indigo-300 text-indigo-600 hover:bg-indigo-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'c3')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Wifi className="w-4 h-4 mr-2" />
+                    RustDesk
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-blue-500/50 text-blue-300 hover:bg-blue-600/20' : 'border-blue-300 text-blue-600 hover:bg-blue-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'c8')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <KeyRound className="w-4 h-4 mr-2" />
+                    Bitwarden
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-green-500/50 text-green-300 hover:bg-green-600/20' : 'border-green-300 text-green-600 hover:bg-green-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'c2')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    BalenaEtcher
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-purple-500/50 text-purple-300 hover:bg-purple-600/20' : 'border-purple-300 text-purple-600 hover:bg-purple-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'c9')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    ProtonVPN
+                  </Button>
+                </div>
+              </div>
+            )}
+            
             {/* Quick Filters */}
             <div className={`flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl ${
               isDarkMode ? 'bg-gray-800/30' : 'bg-gray-100/50'
@@ -2034,16 +2212,16 @@ export default function SystemToolkitDashboard() {
                   key={tool.id}
                   role="article"
                   aria-label={tool.name}
-                  className={`relative overflow-hidden transition-all duration-300 ${
+                  className={`relative overflow-hidden transition-all duration-300 ease-out ${
                     viewMode === 'list' 
-                      ? 'flex flex-row items-center gap-4 p-4 hover:shadow-md border-l-4 ' + 
+                      ? 'flex flex-row items-center gap-4 p-4 hover:shadow-lg border-l-4 ' + 
                         (tool.isFeatured 
                           ? 'border-l-blue-500' 
                           : tool.isScript 
                             ? 'border-l-green-500' 
                             : isDarkMode ? 'border-l-gray-600' : 'border-l-gray-300'
                         )
-                      : 'hover:scale-[1.02] hover:shadow-xl'
+                      : 'hover:scale-[1.02] hover:shadow-2xl hover:-translate-y-1'
                   } ${
                     isDarkMode 
                       ? 'bg-gray-800/50 border-gray-700/50 hover:border-blue-500/50' 
