@@ -50,6 +50,14 @@ const PRICING_PLANS = [
     originalPrice: 1999,
     features: ['সব ফিচার', 'লাইফটাইম আপডেট', 'আনলিমিটেড ডিভাইস', '২৪/৭ সাপোর্ট'],
     popular: false
+  },
+  {
+    id: 'special',
+    name: '🎁 স্পেশাল অফার',
+    price: 199,
+    originalPrice: 599,
+    features: ['১১৫+ টুল অ্যাক্সেস', 'Windows সাপোর্ট', '৭ দিনের ট্রায়াল', 'ইমেইল সাপোর্ট'],
+    popular: false
   }
 ]
 
@@ -216,16 +224,23 @@ export default function LandingPage() {
               <span className="font-medium">১১৫+ প্রফেশনাল টুল এক প্যাকেজে</span>
             </motion.div>
             
-            {/* Title */}
+            {/* Title - Bangla */}
             <motion.h1 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
-              className="text-3xl md:text-5xl font-bold mb-4"
+              className="text-4xl md:text-6xl font-bold mb-2"
             >
-              আপনার সম্পূর্ণ সিস্টেম টুলকিট
-              <br /><span className="text-yellow-400">সকল প্ল্যাটফর্মের জন্য</span>
+              সিস্টেম টুলকিট
             </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="text-xl md:text-2xl text-yellow-400 font-medium mb-4"
+            >
+              সকল ডিভাইসের জন্য
+            </motion.p>
             
             {/* Subtitle */}
             <motion.p 
@@ -248,15 +263,10 @@ export default function LandingPage() {
               <Button
                 size="lg"
                 onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-                className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-8 py-6 font-bold rounded-full shadow-xl text-lg"
+                className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-10 py-7 font-bold rounded-full shadow-xl text-xl"
               >
-                🎁 অর্ডার করুন - ৫০% ছাড় <ArrowRight className="ml-2 w-5 h-5" />
+                🎁 এখনই অর্ডার করুন - ৫০% ছাড় <ArrowRight className="ml-2 w-5 h-5" />
               </Button>
-              <Link href="/dashboard">
-                <Button size="lg" variant="outline" className="px-8 py-6 rounded-full border-2 border-white text-white hover:bg-white/10 text-lg">
-                  <Play className="mr-2 w-5 h-5" /> ডেমো দেখুন
-                </Button>
-              </Link>
             </motion.div>
             
             {/* Trust Badges */}
@@ -291,34 +301,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* ===== PLATFORM STATS ===== */}
-        <section className="py-8 px-4 bg-white">
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
-              {[
-                { icon: Monitor, count: 41, name: 'Windows' },
-                { icon: Laptop, count: 15, name: 'macOS' },
-                { icon: Terminal, count: 15, name: 'Linux' },
-                { icon: Smartphone, count: 13, name: 'Android' },
-                { icon: Monitor, count: 11, name: 'iOS' },
-                { icon: Gift, count: 20, name: 'Cross' }
-              ].map((p, i) => (
-                <motion.div 
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ delay: i * 0.1 }}
-                  viewport={{ once: true }}
-                  className="p-4 rounded-2xl bg-gradient-to-br from-gray-50 to-white text-center border border-gray-100 hover:shadow-lg transition-shadow"
-                >
-                  <p.icon className="w-8 h-8 mx-auto text-blue-600 mb-2" />
-                  <p className="font-bold text-2xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{p.count}+</p>
-                  <p className="text-xs text-gray-500">{p.name}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+        {/* ===== PLATFORM STATS REMOVED ===== */}
 
         {/* ===== FEATURES ===== */}
         <section className="py-12 px-4 bg-gray-50">
@@ -657,15 +640,10 @@ export default function LandingPage() {
                 <Button
                   size="lg"
                   onClick={() => document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-8 py-6 font-bold rounded-full shadow-xl text-lg"
+                  className="bg-yellow-500 hover:bg-yellow-600 text-gray-900 px-10 py-7 font-bold rounded-full shadow-xl text-xl"
                 >
-                  🎁 এখনই শুরু করুন <ArrowRight className="ml-2 w-5 h-5" />
+                  🎁 এখনই অর্ডার করুন <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                <Link href="/dashboard">
-                  <Button size="lg" variant="outline" className="px-8 py-6 rounded-full border-2 border-white text-white hover:bg-white/10 text-lg">
-                    <Play className="mr-2 w-5 h-5" /> ডেমো দেখুন
-                  </Button>
-                </Link>
               </div>
             </motion.div>
           </div>
