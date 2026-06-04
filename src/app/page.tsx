@@ -2447,7 +2447,11 @@ export default function SystemToolkitDashboard() {
         {/* Main Content */}
         <main className="flex-1 container mx-auto px-4 py-6">
           {/* Platform Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={(value) => {
+            setActiveTab(value)
+            const platformName = PLATFORMS.find(p => p.id === value)?.name || value
+            toast({ title: `💻 Platform: ${platformName}` })
+          }} className="w-full">
             <TabsList className={`grid grid-cols-6 gap-2 mb-6 bg-transparent h-auto p-0 ${
               isDarkMode ? '' : ''
             }`}>
@@ -3074,7 +3078,10 @@ export default function SystemToolkitDashboard() {
                       key={filter.id}
                       variant={quickFilter === filter.id ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setQuickFilter(filter.id as typeof quickFilter)}
+                      onClick={() => {
+                        setQuickFilter(filter.id as typeof quickFilter)
+                        toast({ title: `🔍 Filter: ${filter.label}` })
+                      }}
                       className={`h-7 text-xs ${quickFilter === filter.id ? 'bg-blue-600' : ''}`}
                     >
                       {Icon && <Icon className="w-3 h-3 mr-1" />}
@@ -3166,7 +3173,10 @@ export default function SystemToolkitDashboard() {
               <Button
                 variant={!selectedCategory ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setSelectedCategory(null)}
+                onClick={() => {
+                  setSelectedCategory(null)
+                  toast({ title: '📁 Category: All' })
+                }}
                 className={!selectedCategory ? 'bg-blue-600' : ''}
               >
                 All
@@ -3176,7 +3186,10 @@ export default function SystemToolkitDashboard() {
                   key={category}
                   variant={selectedCategory === category ? 'default' : 'outline'}
                   size="sm"
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => {
+                    setSelectedCategory(category)
+                    toast({ title: `📁 Category: ${category}` })
+                  }}
                   className={selectedCategory === category ? 'bg-blue-600' : ''}
                 >
                   {category}
