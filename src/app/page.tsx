@@ -214,6 +214,14 @@ export default function SystemToolkitDashboard() {
   const [newCollectionName, setNewCollectionName] = useState('')
   const [selectedToolForCollection, setSelectedToolForCollection] = useState<string | null>(null)
   
+  // Phase 4: Advanced Features State
+  const [selectedTools, setSelectedTools] = useState<string[]>([])
+  const [showComparison, setShowComparison] = useState(false)
+  const [history, setHistory] = useState<{ toolId: string; timestamp: number; action: 'view' | 'run' | 'favorite' | 'collection' }[]>([])
+  const [showHistoryModal, setShowHistoryModal] = useState(false)
+  const [showAddToCollectionMenu, setShowAddToCollectionMenu] = useState<string | null>(null)
+  const [batchScriptProgress, setBatchScriptProgress] = useState<Record<string, number>>({})
+  
   // Check session on mount
   useEffect(() => {
     try {
@@ -287,6 +295,19 @@ export default function SystemToolkitDashboard() {
           }
         } catch (parseError) {
           console.warn('Failed to parse view counts:', parseError)
+        }
+      }
+      
+      // Load Phase 4 data - History
+      const savedHistory = localStorage.getItem('toolkit_history')
+      if (savedHistory) {
+        try {
+          const parsedHistory = JSON.parse(savedHistory)
+          if (Array.isArray(parsedHistory)) {
+            setHistory(parsedHistory)
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse history:', parseError)
         }
       }
     } catch (error) {
@@ -445,14 +466,23 @@ export default function SystemToolkitDashboard() {
   const toggleFavorite = useCallback((toolId: string) => {
     updateActivity()
     setFavorites(prev => {
-      const newFavorites = prev.includes(toolId)
-        ? prev.filter(id => id !== toolId)
-        : [...prev, toolId]
+      const isAdding = !prev.includes(toolId)
+      const newFavorites = isAdding
+        ? [...prev, toolId]
+        : prev.filter(id => id !== toolId)
       try {
         localStorage.setItem('toolkit_favorites', JSON.stringify(newFavorites))
       } catch (e) {
         console.warn('Failed to save favorites:', e)
       }
+      
+      // Add to history
+      setHistory(h => {
+        const newEntry = { toolId, timestamp: Date.now(), action: 'favorite' as const }
+        const updated = [newEntry, ...h].slice(0, 100)
+        return updated
+      })
+      
       return newFavorites
     })
   }, [updateActivity])
@@ -520,7 +550,7 @@ export default function SystemToolkitDashboard() {
   }, [])
   
   // Track tool view for statistics
-  const trackToolView = useCallback((toolId: string) => {
+  const trackToolView = useCallback((toolId: string, action: 'view' | 'run' = 'view') => {
     // Update view counts
     setToolViewCounts(prev => {
       const updated = { ...prev, [toolId]: (prev[toolId] || 0) + 1 }
@@ -535,6 +565,13 @@ export default function SystemToolkitDashboard() {
       localStorage.setItem('toolkit_recently_viewed', JSON.stringify(updated))
       return updated
     })
+    
+    // Add to history
+    setHistory(prev => {
+      const newEntry = { toolId, timestamp: Date.now(), action }
+      const updated = [newEntry, ...prev].slice(0, 100)
+      return updated
+    })
   }, [])
   
   // Export data
@@ -544,6 +581,7 @@ export default function SystemToolkitDashboard() {
       collections,
       recentlyViewed,
       toolViewCounts,
+      history,
       exportedAt: new Date().toISOString(),
       version: '1.0'
     }
@@ -560,7 +598,7 @@ export default function SystemToolkitDashboard() {
       title: '📤 Export Successful',
       description: 'Your data has been exported'
     })
-  }, [favorites, collections, recentlyViewed, toolViewCounts, toast])
+  }, [favorites, collections, recentlyViewed, toolViewCounts, history, toast])
   
   // Import data
   const importData = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
@@ -587,6 +625,9 @@ export default function SystemToolkitDashboard() {
         if (data.toolViewCounts && typeof data.toolViewCounts === 'object') {
           setToolViewCounts(data.toolViewCounts)
           localStorage.setItem('toolkit_view_counts', JSON.stringify(data.toolViewCounts))
+        }
+        if (data.history && Array.isArray(data.history)) {
+          setHistory(data.history)
         }
         
         toast({
@@ -619,6 +660,65 @@ export default function SystemToolkitDashboard() {
     return sortedByViews
   }, [toolViewCounts])
   
+  // Phase 4: Advanced Features Functions
+  
+  // Toggle tool selection for comparison
+  const toggleToolSelection = useCallback((toolId: string) => {
+    setSelectedTools(prev => {
+      if (prev.includes(toolId)) {
+        return prev.filter(id => id !== toolId)
+      }
+      if (prev.length >= 4) {
+        toast({
+          variant: 'destructive',
+          title: '⚠️ Maximum 4 tools',
+          description: 'You can compare up to 4 tools at a time'
+        })
+        return prev
+      }
+      return [...prev, toolId]
+    })
+  }, [toast])
+  
+  // Add to history
+  const addToHistory = useCallback((toolId: string, action: 'view' | 'run' | 'favorite' | 'collection') => {
+    setHistory(prev => {
+      const newEntry = { toolId, timestamp: Date.now(), action }
+      const updated = [newEntry, ...prev].slice(0, 100) // Keep last 100 entries
+      localStorage.setItem('toolkit_history', JSON.stringify(updated))
+      return updated
+    })
+  }, [])
+  
+  // Get tools for comparison
+  const toolsForComparison = useMemo(() => {
+    return selectedTools.map(id => TOOLS.find(t => t.id === id)).filter(Boolean) as Tool[]
+  }, [selectedTools])
+  
+  // Clear comparison selection
+  const clearComparison = useCallback(() => {
+    setSelectedTools([])
+    setShowComparison(false)
+  }, [])
+  
+  // Get history with tool details
+  const historyWithTools = useMemo(() => {
+    return history.map(entry => ({
+      ...entry,
+      tool: TOOLS.find(t => t.id === entry.toolId)
+    })).filter(entry => entry.tool)
+  }, [history])
+  
+  // Clear history
+  const clearHistory = useCallback(() => {
+    setHistory([])
+    localStorage.removeItem('toolkit_history')
+    toast({
+      title: '🗑️ History Cleared',
+      description: 'All history has been removed'
+    })
+  }, [toast])
+  
   // Copy to clipboard with fallback for older browsers
   const copyToClipboard = useCallback(async (text: string, id: string) => {
     try {
@@ -650,6 +750,34 @@ export default function SystemToolkitDashboard() {
       })
     }
   }, [toast])
+  
+  // Batch run scripts (must be after copyToClipboard)
+  const runBatchScripts = useCallback(async () => {
+    const scriptTools = selectedTools
+      .map(id => TOOLS.find(t => t.id === id))
+      .filter((t): t is Tool => !!t && !!t.scriptCommand)
+    
+    if (scriptTools.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: '❌ No Scripts',
+        description: 'None of the selected tools have scripts'
+      })
+      return
+    }
+    
+    toast({
+      title: '🚀 Batch Script Mode',
+      description: `${scriptTools.length} scripts ready. Copy each command and run in PowerShell (Admin)`
+    })
+    
+    // Show all script commands in a modal or toast
+    for (const tool of scriptTools) {
+      if (tool.scriptCommand) {
+        await copyToClipboard(tool.scriptCommand, `batch-${tool.id}`)
+      }
+    }
+  }, [selectedTools, copyToClipboard, toast])
   
   // Execute script simulation
   const executeScript = useCallback((tool: Tool) => {
@@ -749,6 +877,13 @@ export default function SystemToolkitDashboard() {
       setSelectedCategory(null)
     }
   }, [activeTab, categories, selectedCategory])
+  
+  // Sync history to localStorage
+  useEffect(() => {
+    if (history.length > 0) {
+      localStorage.setItem('toolkit_history', JSON.stringify(history))
+    }
+  }, [history])
   
   // Get risk color
   const getRiskColor = (risk: Tool['risk']) => {
@@ -1030,6 +1165,39 @@ export default function SystemToolkitDashboard() {
                   <TooltipContent>Statistics</TooltipContent>
                 </Tooltip>
                 
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowHistoryModal(true)}
+                      className={isDarkMode ? 'text-amber-400' : 'text-amber-500'}
+                    >
+                      <Clock className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>History ({history.length})</TooltipContent>
+                </Tooltip>
+                
+                {selectedTools.length > 0 && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setShowComparison(true)}
+                        className="relative text-green-400"
+                      >
+                        <Filter className="w-5 h-5" />
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full text-xs text-white flex items-center justify-center">
+                          {selectedTools.length}
+                        </span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Compare ({selectedTools.length} selected)</TooltipContent>
+                  </Tooltip>
+                )}
+                
                 <Separator orientation="vertical" className="h-6 mx-1" />
                 
                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
@@ -1256,9 +1424,30 @@ export default function SystemToolkitDashboard() {
                     </div>
                   )}
                   
+                  {/* Selection checkbox for comparison */}
+                  <div className="absolute top-2 left-2 z-10">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        toggleToolSelection(tool.id)
+                      }}
+                      className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-colors ${
+                        selectedTools.includes(tool.id)
+                          ? 'bg-green-500 border-green-500 text-white'
+                          : isDarkMode
+                            ? 'border-gray-600 hover:border-green-500'
+                            : 'border-gray-300 hover:border-green-500'
+                      }`}
+                    >
+                      {selectedTools.includes(tool.id) && (
+                        <Check className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
+                  
                   {/* New badge */}
                   {tool.isNew && (
-                    <div className="absolute top-2 left-2">
+                    <div className="absolute top-10 left-2">
                       <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-xs">
                         New
                       </Badge>
@@ -1848,6 +2037,202 @@ export default function SystemToolkitDashboard() {
                 </div>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Comparison Modal */}
+        <Dialog open={showComparison} onOpenChange={setShowComparison}>
+          <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Filter className="w-5 h-5 text-green-400" />
+                Compare Tools ({selectedTools.length} selected)
+              </DialogTitle>
+              <DialogDescription>
+                Side-by-side comparison of selected tools
+              </DialogDescription>
+            </DialogHeader>
+            
+            {toolsForComparison.length === 0 ? (
+              <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <Filter className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p>No tools selected</p>
+                <p className="text-sm">Select up to 4 tools to compare</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {/* Comparison table */}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className={`border-b ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                        <th className={`text-left p-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Feature</th>
+                        {toolsForComparison.map(tool => (
+                          <th key={tool.id} className="text-left p-3 font-semibold">
+                            <div className="flex items-center gap-2">
+                              {tool.name}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-5 w-5"
+                                onClick={() => toggleToolSelection(tool.id)}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            </div>
+                          </th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className={`border-b ${isDarkMode ? 'border-gray-700/50' : 'border-gray-100'}`}>
+                        <td className={`p-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Category</td>
+                        {toolsForComparison.map(tool => (
+                          <td key={tool.id} className="p-3">{tool.category}</td>
+                        ))}
+                      </tr>
+                      <tr className={`border-b ${isDarkMode ? 'border-gray-700/50' : 'border-gray-100'}`}>
+                        <td className={`p-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Rating</td>
+                        {toolsForComparison.map(tool => (
+                          <td key={tool.id} className="p-3">
+                            <div className="flex items-center gap-1">
+                              {renderStars(tool.rating)}
+                              <span className="ml-1">({tool.rating})</span>
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className={`border-b ${isDarkMode ? 'border-gray-700/50' : 'border-gray-100'}`}>
+                        <td className={`p-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Downloads</td>
+                        {toolsForComparison.map(tool => (
+                          <td key={tool.id} className="p-3">{tool.downloads}</td>
+                        ))}
+                      </tr>
+                      <tr className={`border-b ${isDarkMode ? 'border-gray-700/50' : 'border-gray-100'}`}>
+                        <td className={`p-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Risk Level</td>
+                        {toolsForComparison.map(tool => (
+                          <td key={tool.id} className="p-3">
+                            <Badge className={getRiskColor(tool.risk)}>{tool.risk}</Badge>
+                          </td>
+                        ))}
+                      </tr>
+                      <tr className={`border-b ${isDarkMode ? 'border-gray-700/50' : 'border-gray-100'}`}>
+                        <td className={`p-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Script</td>
+                        {toolsForComparison.map(tool => (
+                          <td key={tool.id} className="p-3">
+                            {tool.isScript ? (
+                              <Badge className="bg-green-500/20 text-green-400">Yes</Badge>
+                            ) : (
+                              <Badge variant="outline">No</Badge>
+                            )}
+                          </td>
+                        ))}
+                      </tr>
+                      <tr>
+                        <td className={`p-3 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Tags</td>
+                        {toolsForComparison.map(tool => (
+                          <td key={tool.id} className="p-3">
+                            <div className="flex flex-wrap gap-1">
+                              {tool.tags.map(tag => (
+                                <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+                              ))}
+                            </div>
+                          </td>
+                        ))}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Actions */}
+                <div className="flex justify-between">
+                  <Button variant="outline" onClick={clearComparison}>
+                    <X className="w-4 h-4 mr-2" />
+                    Clear Selection
+                  </Button>
+                  <div className="flex gap-2">
+                    {toolsForComparison.some(t => t.isScript) && (
+                      <Button onClick={runBatchScripts} className="bg-green-600 hover:bg-green-700">
+                        <Play className="w-4 h-4 mr-2" />
+                        Run Scripts ({toolsForComparison.filter(t => t.isScript).length})
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+        
+        {/* History Modal */}
+        <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
+          <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-400" />
+                Activity History
+              </DialogTitle>
+              <DialogDescription>
+                Your recent tool interactions
+              </DialogDescription>
+            </DialogHeader>
+            
+            {historyWithTools.length === 0 ? (
+              <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                <Clock className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                <p>No history yet</p>
+                <p className="text-sm">Start interacting with tools to see your history</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  {historyWithTools.slice(0, 50).map((entry, index) => (
+                    <div 
+                      key={`${entry.toolId}-${entry.timestamp}`}
+                      className={`flex items-center justify-between p-3 rounded-lg ${
+                        isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          entry.action === 'view' ? 'bg-blue-500/20 text-blue-400' :
+                          entry.action === 'run' ? 'bg-green-500/20 text-green-400' :
+                          entry.action === 'favorite' ? 'bg-red-500/20 text-red-400' :
+                          'bg-purple-500/20 text-purple-400'
+                        }`}>
+                          {entry.action === 'view' && <Eye className="w-4 h-4" />}
+                          {entry.action === 'run' && <Play className="w-4 h-4" />}
+                          {entry.action === 'favorite' && <Heart className="w-4 h-4" />}
+                          {entry.action === 'collection' && <Bookmark className="w-4 h-4" />}
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{entry.tool?.name}</p>
+                          <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {new Date(entry.timestamp).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="capitalize">
+                        {entry.action}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+                
+                {history.length > 50 && (
+                  <p className={`text-center text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    Showing last 50 of {history.length} entries
+                  </p>
+                )}
+                
+                <div className="flex justify-end">
+                  <Button variant="outline" onClick={clearHistory} className="text-red-400 hover:text-red-300">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clear History
+                  </Button>
+                </div>
+              </div>
+            )}
           </DialogContent>
         </Dialog>
       </div>
