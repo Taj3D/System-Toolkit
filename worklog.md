@@ -333,3 +333,28 @@ Phone: +880 1711-731354 (Bkash, Nagad Personal)
 - ✅ Authentication system working
 - ✅ All features preserved
 - ✅ No functionality lost
+
+---
+
+### ✅ Bengali Landing Page Update (2025-06-04)
+
+**Commit:** `5ef0f6f`
+
+**Changes Made:**
+1. ✅ সম্পূর্ণ বাংলায় রূপান্তর
+2. ✅ Launch App ও Try Demo বাটন ঠিক করা (এখন /dashboard এ যায়)
+3. ✅ নিচে বিকাশ/নগদ নম্বর সরানো
+4. ✅ Facebook Pixel যোগ করা (ID: 918051034554872)
+
+**New Features Added:**
+- ⏰ Countdown Timer (অফার শেষ টাইমার)
+- 🎁 Exit Intent Popup
+- 💬 WhatsApp Floating Button
+- 📱 Sticky Order Button (Mobile)
+- 📝 Order Modal with WhatsApp Integration
+- 🎯 Facebook Pixel Tracking
+
+**Button Tests:**
+- ✅ "অ্যাপ খুলুন" → /dashboard (কাজ করছে)
+- ✅ "ডেমো দেখুন" → /dashboard (কাজ করছে)
+- ✅ /dashboard → Login Page (কাজ করছে)
