@@ -201,9 +201,18 @@ export default function SystemToolkitDashboard() {
   const [selectedScriptTool, setSelectedScriptTool] = useState<Tool | null>(null)
   
   // Quick Filters State
-  const [quickFilter, setQuickFilter] = useState<'all' | 'favorites' | 'scripts' | 'featured' | 'new'>('all')
+  const [quickFilter, setQuickFilter] = useState<'all' | 'favorites' | 'scripts' | 'featured' | 'new' | 'recent'>('all')
   const [riskFilter, setRiskFilter] = useState<'all' | 'safe' | 'moderate' | 'advanced'>('all')
   const [showShortcuts, setShowShortcuts] = useState(false)
+  
+  // Phase 3: Collections & Statistics State
+  const [collections, setCollections] = useState<{ id: string; name: string; toolIds: string[]; color: string; createdAt: number }[]>([])
+  const [recentlyViewed, setRecentlyViewed] = useState<string[]>([])
+  const [toolViewCounts, setToolViewCounts] = useState<Record<string, number>>({})
+  const [showCollectionsModal, setShowCollectionsModal] = useState(false)
+  const [showStatsModal, setShowStatsModal] = useState(false)
+  const [newCollectionName, setNewCollectionName] = useState('')
+  const [selectedToolForCollection, setSelectedToolForCollection] = useState<string | null>(null)
   
   // Check session on mount
   useEffect(() => {
@@ -242,6 +251,43 @@ export default function SystemToolkitDashboard() {
       const savedTheme = localStorage.getItem('toolkit_theme')
       if (savedTheme !== null) {
         setIsDarkMode(savedTheme === 'dark')
+      }
+      
+      // Load Phase 3 data
+      const savedCollections = localStorage.getItem('toolkit_collections')
+      if (savedCollections) {
+        try {
+          const parsedCollections = JSON.parse(savedCollections)
+          if (Array.isArray(parsedCollections)) {
+            setCollections(parsedCollections)
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse collections:', parseError)
+        }
+      }
+      
+      const savedRecentlyViewed = localStorage.getItem('toolkit_recently_viewed')
+      if (savedRecentlyViewed) {
+        try {
+          const parsedRecent = JSON.parse(savedRecentlyViewed)
+          if (Array.isArray(parsedRecent)) {
+            setRecentlyViewed(parsedRecent)
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse recently viewed:', parseError)
+        }
+      }
+      
+      const savedViewCounts = localStorage.getItem('toolkit_view_counts')
+      if (savedViewCounts) {
+        try {
+          const parsedCounts = JSON.parse(savedViewCounts)
+          if (typeof parsedCounts === 'object') {
+            setToolViewCounts(parsedCounts)
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse view counts:', parseError)
+        }
       }
     } catch (error) {
       console.error('Error loading session data:', error)
@@ -411,6 +457,168 @@ export default function SystemToolkitDashboard() {
     })
   }, [updateActivity])
   
+  // Phase 3: Collection management
+  const createCollection = useCallback((name: string, color: string = 'blue') => {
+    const newCollection = {
+      id: `collection-${Date.now()}`,
+      name,
+      toolIds: [],
+      color,
+      createdAt: Date.now()
+    }
+    setCollections(prev => {
+      const updated = [...prev, newCollection]
+      localStorage.setItem('toolkit_collections', JSON.stringify(updated))
+      return updated
+    })
+    toast({
+      title: '📁 Collection Created',
+      description: `"${name}" has been created`
+    })
+  }, [toast])
+  
+  const deleteCollection = useCallback((collectionId: string) => {
+    setCollections(prev => {
+      const updated = prev.filter(c => c.id !== collectionId)
+      localStorage.setItem('toolkit_collections', JSON.stringify(updated))
+      return updated
+    })
+    toast({
+      title: '🗑️ Collection Deleted',
+      description: 'Collection has been removed'
+    })
+  }, [toast])
+  
+  const addToCollection = useCallback((collectionId: string, toolId: string) => {
+    setCollections(prev => {
+      const updated = prev.map(c => {
+        if (c.id === collectionId && !c.toolIds.includes(toolId)) {
+          return { ...c, toolIds: [...c.toolIds, toolId] }
+        }
+        return c
+      })
+      localStorage.setItem('toolkit_collections', JSON.stringify(updated))
+      return updated
+    })
+    toast({
+      title: '➕ Added to Collection',
+      description: 'Tool has been added'
+    })
+  }, [toast])
+  
+  const removeFromCollection = useCallback((collectionId: string, toolId: string) => {
+    setCollections(prev => {
+      const updated = prev.map(c => {
+        if (c.id === collectionId) {
+          return { ...c, toolIds: c.toolIds.filter(id => id !== toolId) }
+        }
+        return c
+      })
+      localStorage.setItem('toolkit_collections', JSON.stringify(updated))
+      return updated
+    })
+  }, [])
+  
+  // Track tool view for statistics
+  const trackToolView = useCallback((toolId: string) => {
+    // Update view counts
+    setToolViewCounts(prev => {
+      const updated = { ...prev, [toolId]: (prev[toolId] || 0) + 1 }
+      localStorage.setItem('toolkit_view_counts', JSON.stringify(updated))
+      return updated
+    })
+    
+    // Update recently viewed (keep last 20)
+    setRecentlyViewed(prev => {
+      const filtered = prev.filter(id => id !== toolId)
+      const updated = [toolId, ...filtered].slice(0, 20)
+      localStorage.setItem('toolkit_recently_viewed', JSON.stringify(updated))
+      return updated
+    })
+  }, [])
+  
+  // Export data
+  const exportData = useCallback(() => {
+    const data = {
+      favorites,
+      collections,
+      recentlyViewed,
+      toolViewCounts,
+      exportedAt: new Date().toISOString(),
+      version: '1.0'
+    }
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `toolkit-backup-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    toast({
+      title: '📤 Export Successful',
+      description: 'Your data has been exported'
+    })
+  }, [favorites, collections, recentlyViewed, toolViewCounts, toast])
+  
+  // Import data
+  const importData = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string)
+        
+        if (data.favorites && Array.isArray(data.favorites)) {
+          setFavorites(data.favorites)
+          localStorage.setItem('toolkit_favorites', JSON.stringify(data.favorites))
+        }
+        if (data.collections && Array.isArray(data.collections)) {
+          setCollections(data.collections)
+          localStorage.setItem('toolkit_collections', JSON.stringify(data.collections))
+        }
+        if (data.recentlyViewed && Array.isArray(data.recentlyViewed)) {
+          setRecentlyViewed(data.recentlyViewed)
+          localStorage.setItem('toolkit_recently_viewed', JSON.stringify(data.recentlyViewed))
+        }
+        if (data.toolViewCounts && typeof data.toolViewCounts === 'object') {
+          setToolViewCounts(data.toolViewCounts)
+          localStorage.setItem('toolkit_view_counts', JSON.stringify(data.toolViewCounts))
+        }
+        
+        toast({
+          title: '📥 Import Successful',
+          description: 'Your data has been restored'
+        })
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: '❌ Import Failed',
+          description: 'Invalid backup file format'
+        })
+      }
+    }
+    reader.readAsText(file)
+    event.target.value = ''
+  }, [toast])
+  
+  // Get recommended tools based on usage
+  const getRecommendedTools = useMemo(() => {
+    if (Object.keys(toolViewCounts).length === 0) return []
+    
+    // Get most viewed tools
+    const sortedByViews = Object.entries(toolViewCounts)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 5)
+      .map(([id]) => TOOLS.find(t => t.id === id))
+      .filter(Boolean) as Tool[]
+    
+    return sortedByViews
+  }, [toolViewCounts])
+  
   // Copy to clipboard with fallback for older browsers
   const copyToClipboard = useCallback(async (text: string, id: string) => {
     try {
@@ -448,9 +656,10 @@ export default function SystemToolkitDashboard() {
     updateActivity()
     if (!tool.scriptCommand) return
     
+    trackToolView(tool.id)
     setSelectedScriptTool(tool)
     setShowScriptModal(true)
-  }, [updateActivity])
+  }, [updateActivity, trackToolView])
   
   // Run script with progress
   const runScriptWithProgress = useCallback((tool: Tool) => {
@@ -495,7 +704,8 @@ export default function SystemToolkitDashboard() {
         (quickFilter === 'favorites' && favorites.includes(tool.id)) ||
         (quickFilter === 'scripts' && tool.isScript) ||
         (quickFilter === 'featured' && tool.isFeatured) ||
-        (quickFilter === 'new' && tool.isNew)
+        (quickFilter === 'new' && tool.isNew) ||
+        (quickFilter === 'recent' && recentlyViewed.includes(tool.id))
       
       // Risk filter
       const matchesRisk = 
@@ -525,7 +735,7 @@ export default function SystemToolkitDashboard() {
           return b.rating - a.rating
       }
     })
-  }, [activeTab, searchQuery, selectedCategory, quickFilter, riskFilter, favorites, sortBy])
+  }, [activeTab, searchQuery, selectedCategory, quickFilter, riskFilter, favorites, sortBy, recentlyViewed])
   
   // Get categories for current platform
   const categories = useMemo(() => {
@@ -792,6 +1002,34 @@ export default function SystemToolkitDashboard() {
                   <TooltipContent>{favorites.length} Favorites</TooltipContent>
                 </Tooltip>
                 
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowCollectionsModal(true)}
+                      className={isDarkMode ? 'text-purple-400' : 'text-purple-500'}
+                    >
+                      <Bookmark className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>{collections.length} Collections</TooltipContent>
+                </Tooltip>
+                
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setShowStatsModal(true)}
+                      className={isDarkMode ? 'text-cyan-400' : 'text-cyan-500'}
+                    >
+                      <TrendingUp className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Statistics</TooltipContent>
+                </Tooltip>
+                
                 <Separator orientation="vertical" className="h-6 mx-1" />
                 
                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg ${
@@ -862,11 +1100,14 @@ export default function SystemToolkitDashboard() {
                 {[
                   { id: 'all', label: 'All', icon: null },
                   { id: 'favorites', label: 'Favorites', icon: Heart },
+                  { id: 'recent', label: 'Recent', icon: Clock },
                   { id: 'scripts', label: 'Scripts', icon: Terminal },
                   { id: 'featured', label: 'Featured', icon: Sparkles },
                   { id: 'new', label: 'New', icon: Zap },
                 ].map(filter => {
                   const Icon = filter.icon
+                  const count = filter.id === 'favorites' ? favorites.length : 
+                               filter.id === 'recent' ? recentlyViewed.length : 0
                   return (
                     <Button
                       key={filter.id}
@@ -877,6 +1118,7 @@ export default function SystemToolkitDashboard() {
                     >
                       {Icon && <Icon className="w-3 h-3 mr-1" />}
                       {filter.label}
+                      {count > 0 && <Badge variant="secondary" className="ml-1 h-4 px-1 text-xs">{count}</Badge>}
                     </Button>
                   )
                 })}
@@ -1112,7 +1354,10 @@ export default function SystemToolkitDashboard() {
                         className={tool.isScript ? '' : 'flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'}
                         variant={tool.isScript ? 'outline' : 'default'}
                         size="sm"
-                        onClick={() => window.open(tool.url, '_blank')}
+                        onClick={() => {
+                          trackToolView(tool.id)
+                          window.open(tool.url, '_blank')
+                        }}
                       >
                         <ExternalLink className="w-4 h-4 mr-1" />
                         Open
@@ -1393,6 +1638,215 @@ export default function SystemToolkitDashboard() {
               <p className={`text-xs text-center ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
                 Press <kbd className="px-1.5 py-0.5 rounded bg-gray-700 text-white text-xs">?</kbd> anytime to toggle this help
               </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Collections Modal */}
+        <Dialog open={showCollectionsModal} onOpenChange={setShowCollectionsModal}>
+          <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Bookmark className="w-5 h-5 text-purple-400" />
+                My Collections
+              </DialogTitle>
+              <DialogDescription>
+                Create and manage your tool collections
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Create new collection */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="New collection name..."
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  className={`flex-1 ${isDarkMode ? 'bg-gray-800 border-gray-700' : 'bg-gray-50 border-gray-200'}`}
+                />
+                <Button 
+                  onClick={() => {
+                    if (newCollectionName.trim()) {
+                      createCollection(newCollectionName.trim())
+                      setNewCollectionName('')
+                    }
+                  }}
+                  disabled={!newCollectionName.trim()}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <Plus className="w-4 h-4 mr-1" />
+                  Create
+                </Button>
+              </div>
+              
+              {/* Collections list */}
+              {collections.length === 0 ? (
+                <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <Bookmark className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>No collections yet</p>
+                  <p className="text-sm">Create a collection to organize your favorite tools</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {collections.map(collection => (
+                    <Card key={collection.id} className={`${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                      <CardHeader className="pb-2">
+                        <div className="flex items-center justify-between">
+                          <CardTitle className="text-sm font-medium flex items-center gap-2">
+                            <div className={`w-3 h-3 rounded-full bg-${collection.color}-500`} />
+                            {collection.name}
+                          </CardTitle>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{collection.toolIds.length} tools</Badge>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-red-400 hover:text-red-300"
+                              onClick={() => deleteCollection(collection.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent>
+                        {collection.toolIds.length === 0 ? (
+                          <p className={`text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                            No tools in this collection
+                          </p>
+                        ) : (
+                          <div className="flex flex-wrap gap-1">
+                            {collection.toolIds.slice(0, 5).map(toolId => {
+                              const tool = TOOLS.find(t => t.id === toolId)
+                              return tool ? (
+                                <Badge key={toolId} variant="outline" className="text-xs">
+                                  {tool.name}
+                                </Badge>
+                              ) : null
+                            })}
+                            {collection.toolIds.length > 5 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{collection.toolIds.length - 5} more
+                              </Badge>
+                            )}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Statistics Modal */}
+        <Dialog open={showStatsModal} onOpenChange={setShowStatsModal}>
+          <DialogContent className={`max-w-2xl ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-cyan-400" />
+                Usage Statistics
+              </DialogTitle>
+              <DialogDescription>
+                Your tool usage insights
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              {/* Overview stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card className={`${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                  <CardContent className="pt-4 text-center">
+                    <Heart className="w-6 h-6 mx-auto mb-2 text-red-400" />
+                    <p className="text-2xl font-bold">{favorites.length}</p>
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Favorites</p>
+                  </CardContent>
+                </Card>
+                <Card className={`${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                  <CardContent className="pt-4 text-center">
+                    <Eye className="w-6 h-6 mx-auto mb-2 text-cyan-400" />
+                    <p className="text-2xl font-bold">{Object.keys(toolViewCounts).length}</p>
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Tools Viewed</p>
+                  </CardContent>
+                </Card>
+                <Card className={`${isDarkMode ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'}`}>
+                  <CardContent className="pt-4 text-center">
+                    <Bookmark className="w-6 h-6 mx-auto mb-2 text-purple-400" />
+                    <p className="text-2xl font-bold">{collections.length}</p>
+                    <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>Collections</p>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              {/* Most viewed tools */}
+              <div>
+                <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-green-400" />
+                  Most Viewed Tools
+                </h3>
+                {getRecommendedTools.length === 0 ? (
+                  <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                    No usage data yet. Start clicking on tools to track your usage!
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {getRecommendedTools.map((tool, index) => (
+                      <div 
+                        key={tool.id}
+                        className={`flex items-center justify-between p-2 rounded-lg ${
+                          isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${
+                            index === 0 ? 'bg-yellow-500 text-black' :
+                            index === 1 ? 'bg-gray-400 text-black' :
+                            index === 2 ? 'bg-amber-700 text-white' :
+                            isDarkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-600'
+                          }`}>
+                            {index + 1}
+                          </span>
+                          <div>
+                            <p className="text-sm font-medium">{tool.name}</p>
+                            <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {tool.category}
+                            </p>
+                          </div>
+                        </div>
+                        <Badge variant="secondary">
+                          {toolViewCounts[tool.id] || 0} views
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Export/Import */}
+              <div className={`pt-4 border-t ${isDarkMode ? 'border-gray-700' : 'border-gray-200'}`}>
+                <h3 className="text-sm font-semibold mb-3">Data Management</h3>
+                <div className="flex gap-2">
+                  <Button onClick={exportData} variant="outline" className="flex-1">
+                    <Download className="w-4 h-4 mr-2" />
+                    Export Data
+                  </Button>
+                  <label className="flex-1">
+                    <Button variant="outline" className="w-full" asChild>
+                      <span>
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        Import Data
+                      </span>
+                    </Button>
+                    <input
+                      type="file"
+                      accept=".json"
+                      onChange={importData}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
