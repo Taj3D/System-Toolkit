@@ -396,7 +396,12 @@ export async function POST(request: NextRequest) {
       message: 'Order created successfully',
       emailSent,
       googleSheetsSync: sheetsSync,
-      dbSaved
+      dbSaved,
+      debug: {
+        hasApiKey: !!BREVO_API_KEY,
+        apiKeyLength: BREVO_API_KEY.length,
+        hasEmail: !!email
+      }
     });
 
   } catch (error) {
