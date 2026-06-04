@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,7 +37,7 @@ import {
   ChevronUp, Heart, Bookmark, Share2, RefreshCw, Clock, User, LogOut,
   KeyRound, Fingerprint, Sparkles, Award, TrendingUp,
   Laptop, Play, Pause, RotateCcw, CheckCircle2, XCircle, Loader2, Keyboard,
-  Grid, List, SortAsc, Filter, X, Plus, Minus, ChevronDown, MoreVertical, Eye
+  Grid, List, SortAsc, Filter, X, Plus, Minus, ChevronDown, MoreVertical, Eye, EyeOff, Menu
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -93,6 +94,95 @@ const PLATFORMS = [
   { id: 'cross-platform', name: 'Cross Platform', icon: Globe, color: 'from-indigo-500 to-purple-500' },
 ] as const
 
+// ============ ANIMATION VARIANTS ============
+const fadeInUp = {
+  initial: { opacity: 0, y: 20 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -20 }
+}
+
+const staggerContainer = {
+  animate: {
+    transition: {
+      staggerChildren: 0.05
+    }
+  }
+}
+
+const cardHover = {
+  rest: { scale: 1, y: 0 },
+  hover: { scale: 1.02, y: -4, transition: { duration: 0.2, ease: 'easeOut' } }
+}
+
+const pulseAnimation = {
+  initial: { opacity: 0.5 },
+  animate: { opacity: 1, transition: { repeat: Infinity, repeatType: 'reverse', duration: 1 } }
+}
+
+// ============ SKELETON COMPONENTS ============
+function SkeletonCard({ isDarkMode }: { isDarkMode: boolean }) {
+  return (
+    <div className={`rounded-xl overflow-hidden ${
+      isDarkMode 
+        ? 'bg-gradient-to-br from-gray-800/50 to-gray-800/30 border border-gray-700/30' 
+        : 'bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200'
+    }`}>
+      <div className="p-4 space-y-3">
+        <motion.div 
+          className={`h-5 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-200'}`}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ repeat: Infinity, duration: 1.5 }}
+          style={{ width: '60%' }}
+        />
+        <motion.div 
+          className={`h-4 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-200'}`}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ repeat: Infinity, duration: 1.5, delay: 0.1 }}
+          style={{ width: '100%' }}
+        />
+        <motion.div 
+          className={`h-4 rounded ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-200'}`}
+          animate={{ opacity: [0.5, 1, 0.5] }}
+          transition={{ repeat: Infinity, duration: 1.5, delay: 0.2 }}
+          style={{ width: '80%' }}
+        />
+        <div className="flex gap-2 pt-2">
+          <motion.div 
+            className={`h-6 w-16 rounded-full ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-200'}`}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ repeat: Infinity, duration: 1.5, delay: 0.3 }}
+          />
+          <motion.div 
+            className={`h-6 w-20 rounded-full ${isDarkMode ? 'bg-gray-700/50' : 'bg-gray-200'}`}
+            animate={{ opacity: [0.5, 1, 0.5] }}
+            transition={{ repeat: Infinity, duration: 1.5, delay: 0.4 }}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function LoadingSpinner({ size = 'md', className = '' }: { size?: 'sm' | 'md' | 'lg'; className?: string }) {
+  const sizeClasses = {
+    sm: 'w-4 h-4',
+    md: 'w-6 h-6',
+    lg: 'w-8 h-8'
+  }
+  return (
+    <motion.div
+      className={`${sizeClasses[size]} ${className}`}
+      animate={{ rotate: 360 }}
+      transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+    >
+      <svg viewBox="0 0 24 24" fill="none" className="w-full h-full">
+        <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" strokeLinecap="round" className="opacity-25" />
+        <path d="M4 12a8 8 0 018-8" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      </svg>
+    </motion.div>
+  )
+}
+
 // ============ TOOLS DATA ============
 const TOOLS: Tool[] = [
   // Windows Tools - System Optimization & Debloat
@@ -126,6 +216,18 @@ const TOOLS: Tool[] = [
   { id: 'w27', name: 'Windows Activation (MAS)', description: 'Open-source Windows and Office activator. HWID and KMS activation.', category: 'Activation', platform: 'windows', url: 'https://github.com/massgravel/Microsoft-Activation-Scripts', risk: 'advanced', rating: 5, downloads: '15M+', tags: ['activation', 'windows', 'office'], isScript: true, scriptCommand: 'irm https://get.activated.win | iex', isFeatured: true },
   { id: 'w28', name: 'RaphiRe Debloat', description: 'Modern Windows debloat tool. Clean, fast, and effective.', category: 'System Optimization', platform: 'windows', url: 'https://github.com/Raphire/Win11Debloat', risk: 'safe', rating: 4.9, downloads: '500K+', tags: ['debloat', 'privacy', 'performance'], isScript: true, scriptCommand: '& ([scriptblock]::Create((irm "https://debloat.raphi.re/")))', isNew: true },
   { id: 'w29', name: 'Chris Titus Dev Tool', description: 'Windows Dev utility for advanced system management and tweaks.', category: 'System Optimization', platform: 'windows', url: 'https://github.com/ChrisTitusTech/winutil', risk: 'safe', rating: 4.9, downloads: '3M+', tags: ['dev', 'tweaks', 'optimization'], isScript: true, scriptCommand: 'irm "https://christitus.com/windev" | iex' },
+
+  // ========== NEW WINDOWS TOOLS (Phase 3) ==========
+  { id: 'w30', name: 'Windows Update Reset', description: 'Reset Windows Update components to fix update issues. Clears cache and resets services.', category: 'System Repair', platform: 'windows', url: 'https://learn.microsoft.com/en-us/windows/deployment/update/windows-update-resources', risk: 'safe', rating: 4.8, downloads: '10M+', tags: ['windows-update', 'repair', 'troubleshoot'], isScript: true, scriptCommand: 'net stop wuauserv && net stop bits && net stop cryptsvc && ren C:\\Windows\\SoftwareDistribution SoftwareDistribution.old && ren C:\\Windows\\System32\\catroot2 catroot2.old && net start wuauserv && net start bits && net start cryptsvc', isNew: true },
+  { id: 'w31', name: 'DNS Flush & Reset', description: 'Flush DNS cache and reset network stack. Fixes network connectivity issues.', category: 'Network', platform: 'windows', url: 'https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/ipconfig', risk: 'safe', rating: 4.9, downloads: '20M+', tags: ['dns', 'network', 'troubleshoot'], isScript: true, scriptCommand: 'ipconfig /flushdns && ipconfig /registerdns && ipconfig /release && ipconfig /renew && netsh winsock reset', isNew: true },
+  { id: 'w32', name: 'GPU Driver Uninstaller (DDU)', description: 'Display Driver Uninstaller - Completely remove GPU drivers for clean install.', category: 'Drivers', platform: 'windows', url: 'https://www.wagnardsoft.com/display-driver-uninstaller-ddu-', risk: 'safe', rating: 4.9, downloads: '15M+', tags: ['gpu', 'drivers', 'nvidia', 'amd'], isFeatured: true },
+  { id: 'w33', name: 'NVCleanstall', description: 'Custom NVIDIA driver installer. Remove telemetry, install only needed components.', category: 'Drivers', platform: 'windows', url: 'https://www.techpowerup.com/nvcleanstall/', risk: 'safe', rating: 4.7, downloads: '5M+', tags: ['nvidia', 'drivers', 'telemetry'], isNew: true },
+  { id: 'w34', name: 'Windows Tweaker (SophiApp)', description: 'Modern Windows 10/11 tweaker with 100+ options. Open source and safe.', category: 'System Optimization', platform: 'windows', url: 'https://github.com/Sophia-Community/SophiApp', risk: 'safe', rating: 4.8, downloads: '2M+', tags: ['tweaks', 'optimization', 'privacy'], isScript: true, scriptCommand: 'irm https://sophia.community/install | iex', isNew: true },
+  { id: 'w35', name: 'Glary Utilities', description: 'All-in-one system utilities for PC optimization, repair, and maintenance.', category: 'System Optimization', platform: 'windows', url: 'https://www.glarysoft.com/glary-utilities/', risk: 'safe', rating: 4.6, downloads: '25M+', tags: ['optimization', 'cleanup', 'maintenance'] },
+  { id: 'w36', name: 'Windows Defender Configurator', description: 'Configure Windows Defender settings. Enable/disable real-time protection.', category: 'Security', platform: 'windows', url: 'https://github.com/AndyFul/ConfigureDefender', risk: 'moderate', rating: 4.5, downloads: '1M+', tags: ['defender', 'antivirus', 'security'], isNew: true },
+  { id: 'w37', name: 'Temp File Cleaner', description: 'Clean all temporary files from Windows. Free up disk space instantly.', category: 'Cleanup', platform: 'windows', url: 'https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/del', risk: 'safe', rating: 4.7, downloads: '30M+', tags: ['cleanup', 'temp', 'disk-space'], isScript: true, scriptCommand: 'del /q/f/s %TEMP%\\* && del /q/f/s C:\\Windows\\Temp\\*', isNew: true },
+  { id: 'w38', name: 'PowerPlan Switcher', description: 'Switch to High Performance power plan for maximum system performance.', category: 'Performance', platform: 'windows', url: 'https://learn.microsoft.com/en-us/windows-hardware/design/device-experiences/powercfg-command-line-options', risk: 'safe', rating: 4.6, downloads: '15M+', tags: ['power', 'performance', 'gaming'], isScript: true, scriptCommand: 'powercfg /setactive 8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c', isNew: true },
+  { id: 'w39', name: 'Privazer', description: 'Deep system cleaner that removes traces of your activities permanently.', category: 'Privacy', platform: 'windows', url: 'https://privazer.com/', risk: 'moderate', rating: 4.7, downloads: '8M+', tags: ['privacy', 'cleanup', 'secure-delete'], isNew: true },
 
   // macOS Tools
   { id: 'm1', name: 'AppCleaner', description: 'Completely uninstall apps from your Mac.', category: 'Uninstaller', platform: 'macos', url: 'https://freemacsoft.net/appcleaner/', risk: 'safe', rating: 4.9, downloads: '5M+', tags: ['uninstaller', 'cleanup'], isFeatured: true },
@@ -205,6 +307,13 @@ const TOOLS: Tool[] = [
   { id: 'c13', name: 'ONLYOFFICE', description: 'Free office suite for documents, spreadsheets, presentations.', category: 'Productivity', platform: 'cross-platform', url: 'https://www.onlyoffice.com/', risk: 'safe', rating: 4.5, downloads: '15M+', tags: ['office', 'documents', 'free'], isNew: true },
   { id: 'c14', name: 'LibreOffice', description: 'Free and powerful open source office suite.', category: 'Productivity', platform: 'cross-platform', url: 'https://www.libreoffice.org/', risk: 'safe', rating: 4.6, downloads: '50M+', tags: ['office', 'documents', 'open-source'] },
   { id: 'c15', name: 'Audacity', description: 'Free, open source, cross-platform audio editor.', category: 'Media', platform: 'cross-platform', url: 'https://www.audacityteam.org/', risk: 'safe', rating: 4.7, downloads: '100M+', tags: ['audio', 'editor', 'recording'], isFeatured: true },
+
+  // ========== NEW CROSS PLATFORM TOOLS (Phase 3) ==========
+  { id: 'c16', name: 'KeePass', description: 'Free, open source, light-weight password manager. Cross-platform with plugins.', category: 'Security', platform: 'cross-platform', url: 'https://keepass.info/', risk: 'safe', rating: 4.8, downloads: '20M+', tags: ['password', 'security', 'offline'], isNew: true },
+  { id: 'c17', name: 'GIMP', description: 'Free and open-source image editor. Professional-grade photo manipulation.', category: 'Media', platform: 'cross-platform', url: 'https://www.gimp.org/', risk: 'safe', rating: 4.6, downloads: '50M+', tags: ['image', 'editor', 'graphics'], isNew: true },
+  { id: 'c18', name: 'Inkscape', description: 'Free vector graphics editor. Create and edit SVG files professionally.', category: 'Media', platform: 'cross-platform', url: 'https://inkscape.org/', risk: 'safe', rating: 4.7, downloads: '15M+', tags: ['vector', 'graphics', 'svg'], isNew: true },
+  { id: 'c19', name: 'OBS Studio', description: 'Free and open source software for video recording and live streaming.', category: 'Media', platform: 'cross-platform', url: 'https://obsproject.com/', risk: 'safe', rating: 4.9, downloads: '100M+', tags: ['streaming', 'recording', 'video'], isFeatured: true, isNew: true },
+  { id: 'c20', name: 'Veracrypt', description: 'Free open source disk encryption with strong security. Cross-platform.', category: 'Security', platform: 'cross-platform', url: 'https://www.veracrypt.fr/', risk: 'safe', rating: 4.9, downloads: '10M+', tags: ['encryption', 'privacy', 'security'], isNew: true },
 ]
 
 // ============ MAIN COMPONENT ============
@@ -280,6 +389,71 @@ export default function SystemToolkitDashboard() {
   } | null>(null)
   const [showAutoInstallModal, setShowAutoInstallModal] = useState(false)
   const [installQueue, setInstallQueue] = useState<string[]>([])
+  
+  // Password visibility state
+  const [showPassword, setShowPassword] = useState(false)
+  
+  // Logout flag to prevent race condition
+  const isLoggingOut = useState(false)
+  
+  // Phase 7: Enhanced Auto-Install & Script Management State
+  const [scriptFavorites, setScriptFavorites] = useState<string[]>([])
+  const [scriptHistory, setScriptHistory] = useState<{ toolId: string; timestamp: number; command: string; status: 'success' | 'error' | 'pending' }[]>([])
+  const [showScriptQueueModal, setShowScriptQueueModal] = useState(false)
+  const [scriptQueue, setScriptQueue] = useState<string[]>([])
+  const [isRunningBatchScripts, setIsRunningBatchScripts] = useState(false)
+  
+  // Phase 8: Enhanced Backup/Restore State
+  const [showBackupModal, setShowBackupModal] = useState(false)
+  const [backupSettings, setBackupSettings] = useState({
+    includeFavorites: true,
+    includeCollections: true,
+    includeHistory: true,
+    includeScriptFavorites: true,
+    includeScriptHistory: true,
+    includeSettings: true
+  })
+  
+  // Phase 9: Sub-Categories & Related Tools State
+  const [selectedSubCategory, setSelectedSubCategory] = useState<string | null>(null)
+  const [showRelatedTools, setShowRelatedTools] = useState(true)
+  
+  // Phase 10: Quick Actions with Confirmation State
+  const [pendingRiskyAction, setPendingRiskyAction] = useState<{
+    tool: Tool
+    action: 'run' | 'install'
+  } | null>(null)
+  
+  // ============ PHASE 4: SECURITY & PERFORMANCE STATE ============
+  
+  // Session Management State
+  const [sessionCountdown, setSessionCountdown] = useState<number | null>(null)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [sessionFingerprint, setSessionFingerprint] = useState<string>('')
+  const [csrfToken, setCsrfToken] = useState<string>('')
+  const [lastActivityTime, setLastActivityTime] = useState<number>(Date.now())
+  
+  // Error Handling State
+  const [errorLog, setErrorLog] = useState<{ timestamp: number; message: string; stack?: string }[]>([])
+  const [showErrorModal, setShowErrorModal] = useState(false)
+  const [currentError, setCurrentError] = useState<string | null>(null)
+  const [retryAction, setRetryAction] = useState<(() => void) | null>(null)
+  
+  // Caching State
+  const [toolCache, setToolCache] = useState<Record<string, { data: Tool; timestamp: number }>>({})
+  const [isOffline, setIsOffline] = useState(false)
+  const [cacheInvalidationKey, setCacheInvalidationKey] = useState(0)
+  
+  // Performance State
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('')
+  
+  // Rate Limiting State
+  const [loginRateLimit, setLoginRateLimit] = useState<{
+    attempts: number
+    lastAttempt: number
+    blocked: boolean
+    blockedUntil: number | null
+  }>({ attempts: 0, lastAttempt: 0, blocked: false, blockedUntil: null })
   
   // Check session on mount
   useEffect(() => {
@@ -369,12 +543,255 @@ export default function SystemToolkitDashboard() {
           console.warn('Failed to parse history:', parseError)
         }
       }
+      
+      // Load Phase 7 data - Script Favorites & History
+      const savedScriptFavorites = localStorage.getItem('toolkit_script_favorites')
+      if (savedScriptFavorites) {
+        try {
+          const parsedScriptFavorites = JSON.parse(savedScriptFavorites)
+          if (Array.isArray(parsedScriptFavorites)) {
+            setScriptFavorites(parsedScriptFavorites)
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse script favorites:', parseError)
+        }
+      }
+      
+      const savedScriptHistory = localStorage.getItem('toolkit_script_history')
+      if (savedScriptHistory) {
+        try {
+          const parsedScriptHistory = JSON.parse(savedScriptHistory)
+          if (Array.isArray(parsedScriptHistory)) {
+            setScriptHistory(parsedScriptHistory)
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse script history:', parseError)
+        }
+      }
     } catch (error) {
       console.error('Error loading session data:', error)
     } finally {
       setIsLoadingSession(false)
     }
   }, [])
+  
+  // ============ PHASE 4: SECURITY & PERFORMANCE UTILITIES ============
+  
+  // Copy to clipboard with fallback for older browsers (moved here to fix dependency order)
+  const copyToClipboard = useCallback(async (text: string, id: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        // Fallback for older browsers or non-HTTPS contexts
+        const textarea = document.createElement('textarea')
+        textarea.value = text
+        textarea.style.position = 'fixed'
+        textarea.style.opacity = '0'
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), COPY_SUCCESS_DURATION_MS)
+      toast({
+        title: '📋 Copied!',
+        description: 'Command copied to clipboard'
+      })
+    } catch (error) {
+      console.error('Copy failed:', error)
+      toast({
+        variant: 'destructive',
+        title: '❌ Copy Failed',
+        description: 'Could not copy to clipboard'
+      })
+    }
+  }, [toast])
+  
+  // ============ PHASE 4: ENHANCED UTILITIES ============
+  
+  // Debounce search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [searchQuery])
+  
+  // Session fingerprinting simulation
+  const generateFingerprint = useCallback(() => {
+    const components = [
+      navigator.userAgent,
+      navigator.language,
+      screen.width + 'x' + screen.height,
+      new Date().getTimezoneOffset().toString(),
+      'toolkit-v2'
+    ]
+    // Simple hash simulation (in production, use a proper crypto library)
+    const fingerprint = components.join('|').split('').reduce((acc, char) => {
+      return ((acc << 5) - acc + char.charCodeAt(0)) | 0
+    }, 0)
+    return `fp_${Math.abs(fingerprint).toString(16)}`
+  }, [])
+  
+  // CSRF token generation
+  const generateCsrfToken = useCallback(() => {
+    const array = new Uint32Array(4)
+    crypto.getRandomValues(array)
+    return Array.from(array, x => x.toString(16)).join('')
+  }, [])
+  
+  // Input sanitization
+  const sanitizeInput = useCallback((input: string): string => {
+    return input
+      .replace(/[<>]/g, '') // Remove potential HTML tags
+      .replace(/javascript:/gi, '') // Remove javascript: protocol
+      .replace(/on\w+=/gi, '') // Remove event handlers
+      .trim()
+      .slice(0, 1000) // Limit length
+  }, [])
+  
+  // Simple encryption simulation (for demo purposes)
+  const encryptData = useCallback((data: string): string => {
+    try {
+      // Simple base64 encoding with prefix (in production, use proper encryption)
+      const encoded = btoa(encodeURIComponent(data))
+      return `enc_${encoded}`
+    } catch {
+      return data
+    }
+  }, [])
+  
+  // Simple decryption simulation
+  const decryptData = useCallback((data: string): string => {
+    try {
+      if (!data.startsWith('enc_')) return data
+      const decoded = atob(data.slice(4))
+      return decodeURIComponent(decoded)
+    } catch {
+      return data
+    }
+  }, [])
+  
+  // Error logging function
+  const logError = useCallback((message: string, error?: Error) => {
+    const logEntry = {
+      timestamp: Date.now(),
+      message,
+      stack: error?.stack
+    }
+    setErrorLog(prev => {
+      const updated = [logEntry, ...prev].slice(0, 50) // Keep last 50 errors
+      localStorage.setItem('toolkit_error_log', JSON.stringify(updated))
+      return updated
+    })
+    console.error(`[Error] ${message}`, error)
+  }, [])
+  
+  // Cache management
+  const getCachedTool = useCallback((toolId: string): Tool | null => {
+    const cached = toolCache[toolId]
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) { // 5 min cache
+      return cached.data
+    }
+    return null
+  }, [toolCache])
+  
+  const setCachedTool = useCallback((toolId: string, tool: Tool) => {
+    setToolCache(prev => ({
+      ...prev,
+      [toolId]: { data: tool, timestamp: Date.now() }
+    }))
+  }, [])
+  
+  const invalidateCache = useCallback(() => {
+    setToolCache({})
+    setCacheInvalidationKey(prev => prev + 1)
+    toast({
+      title: '🗑️ Cache Cleared',
+      description: 'Tool cache has been invalidated'
+    })
+  }, [toast])
+  
+  // Offline detection
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false)
+    const handleOffline = () => setIsOffline(true)
+    
+    window.addEventListener('online', handleOnline)
+    window.addEventListener('offline', handleOffline)
+    
+    // Check initial state
+    setIsOffline(!navigator.onLine)
+    
+    return () => {
+      window.removeEventListener('online', handleOnline)
+      window.removeEventListener('offline', handleOffline)
+    }
+  }, [])
+  
+  // Initialize CSRF token and fingerprint on mount
+  useEffect(() => {
+    setCsrfToken(generateCsrfToken())
+    setSessionFingerprint(generateFingerprint())
+  }, [generateCsrfToken, generateFingerprint])
+  
+  // Rate limiting check
+  const checkRateLimit = useCallback((): { allowed: boolean; waitTime: number } => {
+    const now = Date.now()
+    const windowMs = 15 * 60 * 1000 // 15 minutes
+    const maxAttempts = 5
+    
+    if (loginRateLimit.blocked && loginRateLimit.blockedUntil && now < loginRateLimit.blockedUntil) {
+      return { allowed: false, waitTime: Math.ceil((loginRateLimit.blockedUntil - now) / 1000) }
+    }
+    
+    // Reset if window has passed
+    if (now - loginRateLimit.lastAttempt > windowMs) {
+      setLoginRateLimit({ attempts: 0, lastAttempt: now, blocked: false, blockedUntil: null })
+      return { allowed: true, waitTime: 0 }
+    }
+    
+    if (loginRateLimit.attempts >= maxAttempts) {
+      const blockedUntil = now + 30 * 60 * 1000 // Block for 30 minutes
+      setLoginRateLimit(prev => ({ ...prev, blocked: true, blockedUntil }))
+      return { allowed: false, waitTime: 30 * 60 }
+    }
+    
+    return { allowed: true, waitTime: 0 }
+  }, [loginRateLimit])
+  
+  // Record login attempt
+  const recordLoginAttempt = useCallback((success: boolean) => {
+    if (success) {
+      setLoginRateLimit({ attempts: 0, lastAttempt: 0, blocked: false, blockedUntil: null })
+    } else {
+      setLoginRateLimit(prev => ({
+        ...prev,
+        attempts: prev.attempts + 1,
+        lastAttempt: Date.now()
+      }))
+    }
+  }, [])
+  
+  // Retry handler
+  const handleRetry = useCallback(() => {
+    if (retryAction) {
+      retryAction()
+      setRetryAction(null)
+      setCurrentError(null)
+      setShowErrorModal(false)
+    }
+  }, [retryAction])
+  
+  // Show error with retry option
+  const showError = useCallback((message: string, retry?: () => void) => {
+    setCurrentError(message)
+    setRetryAction(retry || null)
+    setShowErrorModal(true)
+    logError(message)
+  }, [logError])
   
   // Session timer update
   useEffect(() => {
@@ -391,14 +808,24 @@ export default function SystemToolkitDashboard() {
   
   // Logout handler - defined first as it's used in useEffect
   const handleLogout = useCallback(() => {
+    // Set flag first to prevent race condition
+    isLoggingOut[1](true)
+    // Clear session
     setSession(null)
+    // Remove from localStorage
     localStorage.removeItem('toolkit_session')
+    // Reset password input
     setPasswordInput('')
+    // Show toast
     toast({
       title: '🔒 Logged Out',
       description: 'Session ended successfully'
     })
-  }, [toast])
+    // Reset flag after a short delay
+    setTimeout(() => {
+      isLoggingOut[1](false)
+    }, 100)
+  }, [toast, isLoggingOut])
   
   // Activity tracking
   useEffect(() => {
@@ -520,18 +947,35 @@ export default function SystemToolkitDashboard() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [session, toggleTheme])
   
-  // Update activity
+  // Update activity - with race condition protection
   const updateActivity = useCallback(() => {
-    if (session) {
-      const newSession = { ...session, lastActivity: Date.now() }
-      setSession(newSession)
-      localStorage.setItem('toolkit_session', JSON.stringify(newSession))
-    }
-  }, [session])
+    // Don't update if logging out or no session
+    if (isLoggingOut[0] || !session) return
+    
+    // Check localStorage first to ensure session exists
+    const storedSession = localStorage.getItem('toolkit_session')
+    if (!storedSession) return
+    
+    const newSession = { ...session, lastActivity: Date.now() }
+    setSession(newSession)
+    localStorage.setItem('toolkit_session', JSON.stringify(newSession))
+  }, [session, isLoggingOut])
   
-  // Login handler
+  // Login handler with enhanced security (Phase 4)
   const handleLogin = useCallback(async () => {
-    // Check if locked out
+    // Check rate limiting
+    const rateCheck = checkRateLimit()
+    if (!rateCheck.allowed) {
+      setLoginError(`Too many failed attempts. Try again in ${Math.floor(rateCheck.waitTime / 60)} minutes.`)
+      toast({
+        variant: 'destructive',
+        title: '⏳ Rate Limited',
+        description: `Please wait ${Math.floor(rateCheck.waitTime / 60)} minutes before trying again.`
+      })
+      return
+    }
+    
+    // Check if locked out (legacy)
     if (isLockedOut && lockoutEndTime && Date.now() < lockoutEndTime) {
       const remainingSeconds = Math.ceil((lockoutEndTime - Date.now()) / 1000)
       setLoginError(`Too many failed attempts. Try again in ${remainingSeconds} seconds.`)
@@ -548,23 +992,42 @@ export default function SystemToolkitDashboard() {
     setIsLoading(true)
     setLoginError('')
     
+    // Sanitize input
+    const sanitizedPassword = sanitizeInput(passwordInput)
+    
     await new Promise(resolve => setTimeout(resolve, 800))
     
-    if (VALID_PASSWORDS.includes(passwordInput)) {
+    if (VALID_PASSWORDS.includes(sanitizedPassword)) {
       const newSession: UserSession = {
         isAuthenticated: true,
         loginTime: Date.now(),
         lastActivity: Date.now(),
         userName: 'Administrator'
       }
+      
+      // Encrypt session data if Remember Me is checked
+      const sessionData = JSON.stringify(newSession)
+      const encryptedSession = rememberMe ? encryptData(sessionData) : sessionData
+      
       setSession(newSession)
-      localStorage.setItem('toolkit_session', JSON.stringify(newSession))
-      setLoginAttempts(0) // Reset attempts on successful login
+      localStorage.setItem('toolkit_session', encryptedSession)
+      
+      // Store fingerprint for session validation
+      localStorage.setItem('toolkit_fingerprint', sessionFingerprint)
+      localStorage.setItem('toolkit_csrf', csrfToken)
+      
+      // Reset rate limiting on successful login
+      recordLoginAttempt(true)
+      setLoginAttempts(0)
+      
       toast({
         title: '🔓 Login Successful',
-        description: 'Welcome to System Toolkit Dashboard'
+        description: `Welcome to System Toolkit Dashboard${rememberMe ? ' (Session will be remembered)' : ''}`
       })
     } else {
+      // Record failed attempt
+      recordLoginAttempt(false)
+      
       const newAttempts = loginAttempts + 1
       setLoginAttempts(newAttempts)
       
@@ -579,6 +1042,9 @@ export default function SystemToolkitDashboard() {
           title: '🔒 Account Temporarily Locked',
           description: 'Too many failed login attempts. Please wait 30 seconds.'
         })
+        
+        // Log security event
+        logError('Multiple failed login attempts detected')
       } else {
         setLoginError(`Invalid password. ${5 - newAttempts} attempts remaining.`)
         toast({
@@ -590,7 +1056,7 @@ export default function SystemToolkitDashboard() {
     }
     
     setIsLoading(false)
-  }, [passwordInput, toast, loginAttempts, isLockedOut, lockoutEndTime])
+  }, [passwordInput, toast, loginAttempts, isLockedOut, lockoutEndTime, checkRateLimit, sanitizeInput, rememberMe, encryptData, sessionFingerprint, csrfToken, recordLoginAttempt, logError])
   
   // Toggle favorite
   const toggleFavorite = useCallback((toolId: string) => {
@@ -790,6 +1256,335 @@ export default function SystemToolkitDashboard() {
     return sortedByViews
   }, [toolViewCounts])
   
+  // Phase 7: Script Management Functions
+  
+  // Toggle script favorite
+  const toggleScriptFavorite = useCallback((toolId: string) => {
+    setScriptFavorites(prev => {
+      const isAdding = !prev.includes(toolId)
+      const updated = isAdding
+        ? [...prev, toolId]
+        : prev.filter(id => id !== toolId)
+      localStorage.setItem('toolkit_script_favorites', JSON.stringify(updated))
+      toast({
+        title: isAdding ? '⭐ Script Favorited' : '💔 Script Unfavorited',
+        description: isAdding ? 'Added to your favorite scripts' : 'Removed from favorites'
+      })
+      return updated
+    })
+  }, [toast])
+  
+  // Add to script history
+  const addToScriptHistory = useCallback((toolId: string, command: string, status: 'success' | 'error' | 'pending') => {
+    setScriptHistory(prev => {
+      const newEntry = { toolId, timestamp: Date.now(), command, status }
+      const updated = [newEntry, ...prev].slice(0, 50)
+      localStorage.setItem('toolkit_script_history', JSON.stringify(updated))
+      return updated
+    })
+  }, [])
+  
+  // Add to script queue
+  const addToScriptQueue = useCallback((toolId: string) => {
+    const tool = TOOLS.find(t => t.id === toolId)
+    if (!tool?.scriptCommand) {
+      toast({
+        variant: 'destructive',
+        title: '❌ Invalid Tool',
+        description: 'This tool does not have a script command'
+      })
+      return
+    }
+    setScriptQueue(prev => {
+      if (prev.includes(toolId)) {
+        toast({
+          title: 'ℹ️ Already in Queue',
+          description: `${tool.name} is already in the queue`
+        })
+        return prev
+      }
+      toast({
+        title: '➕ Added to Queue',
+        description: `${tool.name} added to script queue`
+      })
+      return [...prev, toolId]
+    })
+  }, [toast])
+  
+  // Remove from script queue
+  const removeFromScriptQueue = useCallback((toolId: string) => {
+    setScriptQueue(prev => prev.filter(id => id !== toolId))
+  }, [])
+  
+  // Clear script queue
+  const clearScriptQueue = useCallback(() => {
+    setScriptQueue([])
+    toast({
+      title: '🗑️ Queue Cleared',
+      description: 'All scripts removed from queue'
+    })
+  }, [toast])
+  
+  // Run all scripts in queue (simulated - copies all commands)
+  const runAllScriptsInQueue = useCallback(async () => {
+    if (scriptQueue.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: '❌ Empty Queue',
+        description: 'Add scripts to the queue first'
+      })
+      return
+    }
+    
+    setIsRunningBatchScripts(true)
+    
+    const scriptTools = scriptQueue
+      .map(id => TOOLS.find(t => t.id === id))
+      .filter((t): t is Tool => !!t && !!t.scriptCommand)
+    
+    const allCommands = scriptTools.map(t => t.scriptCommand).join('\n\n')
+    
+    // Copy all commands to clipboard
+    await copyToClipboard(allCommands, 'batch-all-scripts')
+    
+    // Add to script history
+    scriptTools.forEach(tool => {
+      if (tool.scriptCommand) {
+        addToScriptHistory(tool.id, tool.scriptCommand, 'success')
+      }
+    })
+    
+    setIsRunningBatchScripts(false)
+    
+    toast({
+      title: '📋 All Commands Copied!',
+      description: `${scriptTools.length} script commands copied. Run each in PowerShell (Admin)`
+    })
+  }, [scriptQueue, copyToClipboard, addToScriptHistory, toast])
+  
+  // Phase 8: Enhanced Backup/Restore Functions
+  
+  // Enhanced export data with options
+  const exportDataWithOptions = useCallback(() => {
+    const data: Record<string, unknown> = {
+      exportedAt: new Date().toISOString(),
+      version: '2.0'
+    }
+    
+    if (backupSettings.includeFavorites) {
+      data.favorites = favorites
+    }
+    if (backupSettings.includeCollections) {
+      data.collections = collections
+    }
+    if (backupSettings.includeHistory) {
+      data.history = history
+    }
+    if (backupSettings.includeScriptFavorites) {
+      data.scriptFavorites = scriptFavorites
+    }
+    if (backupSettings.includeScriptHistory) {
+      data.scriptHistory = scriptHistory
+    }
+    if (backupSettings.includeSettings) {
+      data.settings = {
+        isDarkMode,
+        viewMode,
+        sortBy,
+        riskFilter,
+        quickFilter
+      }
+    }
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `toolkit-backup-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    toast({
+      title: '📤 Backup Created',
+      description: 'Your data has been exported successfully'
+    })
+  }, [backupSettings, favorites, collections, history, scriptFavorites, scriptHistory, isDarkMode, viewMode, sortBy, riskFilter, quickFilter, toast])
+  
+  // Enhanced import data with options
+  const importDataWithOptions = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+    
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string)
+        
+        if (data.favorites && backupSettings.includeFavorites) {
+          setFavorites(data.favorites)
+          localStorage.setItem('toolkit_favorites', JSON.stringify(data.favorites))
+        }
+        if (data.collections && backupSettings.includeCollections) {
+          setCollections(data.collections)
+          localStorage.setItem('toolkit_collections', JSON.stringify(data.collections))
+        }
+        if (data.history && backupSettings.includeHistory) {
+          setHistory(data.history)
+          localStorage.setItem('toolkit_history', JSON.stringify(data.history))
+        }
+        if (data.scriptFavorites && backupSettings.includeScriptFavorites) {
+          setScriptFavorites(data.scriptFavorites)
+          localStorage.setItem('toolkit_script_favorites', JSON.stringify(data.scriptFavorites))
+        }
+        if (data.scriptHistory && backupSettings.includeScriptHistory) {
+          setScriptHistory(data.scriptHistory)
+          localStorage.setItem('toolkit_script_history', JSON.stringify(data.scriptHistory))
+        }
+        if (data.settings && backupSettings.includeSettings) {
+          if (data.settings.isDarkMode !== undefined) {
+            setIsDarkMode(data.settings.isDarkMode)
+            localStorage.setItem('toolkit_theme', data.settings.isDarkMode ? 'dark' : 'light')
+          }
+          if (data.settings.viewMode) setViewMode(data.settings.viewMode)
+          if (data.settings.sortBy) setSortBy(data.settings.sortBy)
+          if (data.settings.riskFilter) setRiskFilter(data.settings.riskFilter)
+          if (data.settings.quickFilter) setQuickFilter(data.settings.quickFilter)
+        }
+        
+        toast({
+          title: '📥 Backup Restored',
+          description: 'Your data has been imported successfully'
+        })
+      } catch (error) {
+        toast({
+          variant: 'destructive',
+          title: '❌ Import Failed',
+          description: 'Invalid backup file format'
+        })
+      }
+    }
+    reader.readAsText(file)
+    event.target.value = ''
+  }, [backupSettings, toast])
+  
+  // Phase 9: Sub-Categories & Related Tools
+  
+  // Sub-categories mapping
+  const subCategoriesMap: Record<string, string[]> = useMemo(() => ({
+    'System Optimization': ['Debloat', 'Performance', 'Privacy', 'Tweaks'],
+    'Security': ['Antivirus', 'Encryption', 'Firewall', 'Password Manager'],
+    'Utilities': ['File Management', 'System Tools', 'Archive', 'Search'],
+    'Diagnostics': ['Hardware', 'System Info', 'Network', 'Disk'],
+    'Drivers': ['GPU', 'Audio', 'Network', 'Universal'],
+    'Cleanup': ['Temp Files', 'Registry', 'Browser', 'System'],
+    'Backup': ['Full Backup', 'Incremental', 'Cloud', 'Local'],
+    'Media': ['Audio', 'Video', 'Image', 'Streaming'],
+  }), [])
+  
+  // Get related tools based on tags
+  const getRelatedTools = useCallback((tool: Tool) => {
+    return TOOLS.filter(t => 
+      t.id !== tool.id && 
+      t.tags.some(tag => tool.tags.includes(tag))
+    ).slice(0, 4)
+  }, [])
+  
+  // Execute script simulation (moved here to fix dependency order - Phase 4)
+  const executeScript = useCallback((tool: Tool) => {
+    updateActivity()
+    if (!tool.scriptCommand) return
+    
+    trackToolView(tool.id)
+    setSelectedScriptTool(tool)
+    setShowScriptModal(true)
+  }, [updateActivity, trackToolView])
+  
+  // Phase 10: Run script with confirmation for risky scripts
+  const runScriptWithConfirmation = useCallback((tool: Tool) => {
+    if (tool.risk === 'advanced' || tool.risk === 'moderate') {
+      setPendingRiskyAction({ tool, action: 'run' })
+    } else {
+      executeScript(tool)
+    }
+  }, [executeScript])
+  
+  // Confirm risky action
+  const confirmRiskyAction = useCallback(() => {
+    if (pendingRiskyAction) {
+      if (pendingRiskyAction.action === 'run') {
+        executeScript(pendingRiskyAction.tool)
+      } else {
+        // Call startAutoInstall directly - it's defined later but accessible
+        // This is intentional to avoid circular dependency
+        ;(async () => {
+          const tool = pendingRiskyAction.tool
+          if (!tool.scriptCommand) {
+            toast({
+              variant: 'destructive',
+              title: '❌ No Script Available',
+              description: 'This tool does not have an auto-install script'
+            })
+            return
+          }
+          
+          updateActivity()
+          trackToolView(tool.id)
+          setShowAutoInstallModal(true)
+          
+          const steps = [
+            { status: 'preparing' as const, message: 'Preparing installation environment...', duration: 800 },
+            { status: 'downloading' as const, message: 'Downloading required files...', duration: 1500 },
+            { status: 'installing' as const, message: 'Installing software...', duration: 2000 },
+            { status: 'configuring' as const, message: 'Configuring settings...', duration: 1000 },
+            { status: 'completed' as const, message: 'Installation complete!', duration: 500 }
+          ]
+          
+          let currentProgress = 0
+          
+          for (const step of steps) {
+            setInstallProgress({
+              toolId: tool.id,
+              status: step.status,
+              progress: currentProgress,
+              message: step.message
+            })
+            
+            await new Promise(resolve => setTimeout(resolve, step.duration))
+            currentProgress += 20
+          }
+          
+          await copyToClipboard(tool.scriptCommand, `auto-install-${tool.id}`)
+          
+          setInstallProgress({
+            toolId: tool.id,
+            status: 'completed',
+            progress: 100,
+            message: 'Command copied! Open PowerShell as Administrator and paste to execute.'
+          })
+          
+          setHistory(prev => {
+            const newEntry = { toolId: tool.id, timestamp: Date.now(), action: 'run' as const }
+            const updated = [newEntry, ...prev].slice(0, 100)
+            localStorage.setItem('toolkit_history', JSON.stringify(updated))
+            return updated
+          })
+          
+          toast({
+            title: '🚀 Auto-Install Ready!',
+            description: `${tool.name} - Command copied to clipboard. Run in PowerShell (Admin)`
+          })
+        })()
+      }
+      setPendingRiskyAction(null)
+    }
+  }, [pendingRiskyAction, executeScript, toast, updateActivity, trackToolView, copyToClipboard])
+  
+  // Cancel risky action
+  const cancelRiskyAction = useCallback(() => {
+    setPendingRiskyAction(null)
+  }, [])
+  
   // Phase 4: Advanced Features Functions
   
   // Toggle tool selection for comparison
@@ -910,39 +1705,7 @@ export default function SystemToolkitDashboard() {
     )
   }, [history.length, showConfirmation, clearHistory])
   
-  // Copy to clipboard with fallback for older browsers
-  const copyToClipboard = useCallback(async (text: string, id: string) => {
-    try {
-      if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText(text)
-      } else {
-        // Fallback for older browsers or non-HTTPS contexts
-        const textarea = document.createElement('textarea')
-        textarea.value = text
-        textarea.style.position = 'fixed'
-        textarea.style.opacity = '0'
-        document.body.appendChild(textarea)
-        textarea.select()
-        document.execCommand('copy')
-        document.body.removeChild(textarea)
-      }
-      setCopiedId(id)
-      setTimeout(() => setCopiedId(null), COPY_SUCCESS_DURATION_MS)
-      toast({
-        title: '📋 Copied!',
-        description: 'Command copied to clipboard'
-      })
-    } catch (error) {
-      console.error('Copy failed:', error)
-      toast({
-        variant: 'destructive',
-        title: '❌ Copy Failed',
-        description: 'Could not copy to clipboard'
-      })
-    }
-  }, [toast])
-  
-  // Batch run scripts (must be after copyToClipboard)
+  // Batch run scripts
   const runBatchScripts = useCallback(async () => {
     const scriptTools = selectedTools
       .map(id => TOOLS.find(t => t.id === id))
@@ -969,16 +1732,6 @@ export default function SystemToolkitDashboard() {
       }
     }
   }, [selectedTools, copyToClipboard, toast])
-  
-  // Execute script simulation
-  const executeScript = useCallback((tool: Tool) => {
-    updateActivity()
-    if (!tool.scriptCommand) return
-    
-    trackToolView(tool.id)
-    setSelectedScriptTool(tool)
-    setShowScriptModal(true)
-  }, [updateActivity, trackToolView])
   
   // Run script with progress
   const runScriptWithProgress = useCallback((tool: Tool) => {
@@ -1085,14 +1838,15 @@ export default function SystemToolkitDashboard() {
     })
   }, [toast])
   
-  // Filter and sort tools
+  // Filter and sort tools (using debounced search for performance - Phase 4)
   const filteredTools = useMemo(() => {
     const filtered = TOOLS.filter(tool => {
       const matchesPlatform = tool.platform === activeTab
-      const matchesSearch = searchQuery === '' || 
-        tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tool.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tool.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
+      // Use debounced search query for better performance
+      const matchesSearch = debouncedSearchQuery === '' || 
+        tool.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        tool.description.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        tool.tags.some(tag => tag.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
       const matchesCategory = !selectedCategory || tool.category === selectedCategory
       
       // Quick filters
@@ -1132,7 +1886,7 @@ export default function SystemToolkitDashboard() {
           return b.rating - a.rating
       }
     })
-  }, [activeTab, searchQuery, selectedCategory, quickFilter, riskFilter, favorites, sortBy, recentlyViewed])
+  }, [activeTab, debouncedSearchQuery, selectedCategory, quickFilter, riskFilter, favorites, sortBy, recentlyViewed])
   
   // Get categories for current platform
   const categories = useMemo(() => {
@@ -1238,21 +1992,39 @@ export default function SystemToolkitDashboard() {
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <Input
-              type="password"
-              placeholder="Enter password"
-              value={passwordInput}
-              onChange={(e) => {
-                setPasswordInput(e.target.value)
-                setLoginError('')
-              }}
-              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-              className={`h-12 ${
-                isDarkMode 
-                  ? 'bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500' 
-                  : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'
-              } ${loginError ? 'border-red-500' : ''}`}
-            />
+            <div className="relative">
+              <Input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter password"
+                value={passwordInput}
+                onChange={(e) => {
+                  setPasswordInput(e.target.value)
+                  setLoginError('')
+                }}
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                className={`h-12 pr-12 ${
+                  isDarkMode 
+                    ? 'bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500' 
+                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'
+                } ${loginError ? 'border-red-500' : ''}`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md transition-colors ${
+                  isDarkMode 
+                    ? 'text-gray-400 hover:text-gray-200 hover:bg-gray-700' 
+                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200'
+                }`}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-5 h-5" />
+                ) : (
+                  <Eye className="w-5 h-5" />
+                )}
+              </button>
+            </div>
             
             {loginError && (
               <p className="text-sm text-red-400 flex items-center gap-2">
@@ -1260,6 +2032,19 @@ export default function SystemToolkitDashboard() {
                 {loginError}
               </p>
             )}
+            
+            {/* Remember Me Checkbox - Phase 4 */}
+            <label className={`flex items-center gap-2 cursor-pointer ${
+              isDarkMode ? 'text-gray-300' : 'text-gray-600'
+            }`}>
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-sm">Remember me (encrypt session)</span>
+            </label>
             
             <Button
               onClick={handleLogin}
@@ -1356,7 +2141,16 @@ export default function SystemToolkitDashboard() {
                   <Shield className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <h1 className="font-bold text-lg">System Toolkit</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="font-bold text-lg">System Toolkit</h1>
+                    {/* Offline Indicator - Phase 4 */}
+                    {isOffline && (
+                      <Badge variant="outline" className="text-orange-400 border-orange-400/50 text-xs">
+                        <Wifi className="w-3 h-3 mr-1 opacity-50" />
+                        Offline
+                      </Badge>
+                    )}
+                  </div>
                   <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                     {TOOLS.length}+ Tools • Cross-Platform
                   </p>
@@ -1604,6 +2398,36 @@ export default function SystemToolkitDashboard() {
                     <Zap className="w-4 h-4" />
                     Quick Actions - One Click Solutions
                   </h3>
+                  {/* Script Queue Indicator */}
+                  {scriptQueue.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-purple-600 text-white">
+                        {scriptQueue.length} in Queue
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-7 text-xs bg-green-600/20 border-green-500/50 text-green-300 hover:bg-green-600/30"
+                        onClick={runAllScriptsInQueue}
+                        disabled={isRunningBatchScripts}
+                      >
+                        {isRunningBatchScripts ? (
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                        ) : (
+                          <Play className="w-3 h-3 mr-1" />
+                        )}
+                        Run All
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs text-red-400 hover:text-red-300"
+                        onClick={clearScriptQueue}
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Button
@@ -1623,7 +2447,10 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-purple-500/50 text-purple-300 hover:bg-purple-600/20' : 'border-purple-300 text-purple-600 hover:bg-purple-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w6')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) {
+                        // Advanced risk - show confirmation
+                        setPendingRiskyAction({ tool, action: 'install' })
+                      }
                     }}
                   >
                     <KeyRound className="w-4 h-4 mr-2" />
@@ -1691,6 +2518,76 @@ export default function SystemToolkitDashboard() {
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
                     RaphiRe Debloat
+                  </Button>
+                  {/* New Quick Actions - Phase 3 */}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-pink-500/50 text-pink-300 hover:bg-pink-600/20' : 'border-pink-300 text-pink-600 hover:bg-pink-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w31')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <Wifi className="w-4 h-4 mr-2" />
+                    Reset Network
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/20' : 'border-indigo-300 text-indigo-600 hover:bg-indigo-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w30')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reset Win Update
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-yellow-500/50 text-yellow-300 hover:bg-yellow-600/20' : 'border-yellow-300 text-yellow-600 hover:bg-yellow-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w37')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clean Temp
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-green-500/50 text-green-300 hover:bg-green-600/20' : 'border-green-300 text-green-600 hover:bg-green-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w38')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <Battery className="w-4 h-4 mr-2" />
+                    High Performance
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-orange-500/50 text-orange-300 hover:bg-orange-600/20' : 'border-orange-300 text-orange-600 hover:bg-orange-100'}
+                    onClick={() => setShowScriptQueueModal(true)}
+                  >
+                    <Terminal className="w-4 h-4 mr-2" />
+                    Script Queue
+                    {scriptQueue.length > 0 && (
+                      <Badge className="ml-2 h-4 px-1 text-xs bg-orange-600">{scriptQueue.length}</Badge>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-violet-500/50 text-violet-300 hover:bg-violet-600/20' : 'border-violet-300 text-violet-600 hover:bg-violet-100'}
+                    onClick={() => setShowBackupModal(true)}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Backup Data
                   </Button>
                 </div>
               </div>
@@ -2203,31 +3100,44 @@ export default function SystemToolkitDashboard() {
             </p>
             
             {/* Tools Grid/List */}
-            <div className={viewMode === 'grid' 
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' 
-              : 'flex flex-col gap-2'
-            }>
-              {filteredTools.map(tool => (
-                <Card
+            <motion.div 
+              initial="initial"
+              animate="animate"
+              variants={staggerContainer}
+              className={viewMode === 'grid' 
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4' 
+                : 'flex flex-col gap-2'
+              }
+            >
+              {filteredTools.map((tool, index) => (
+                <motion.div
                   key={tool.id}
-                  role="article"
-                  aria-label={tool.name}
-                  className={`relative overflow-hidden transition-all duration-300 ease-out ${
-                    viewMode === 'list' 
-                      ? 'flex flex-row items-center gap-4 p-4 hover:shadow-lg border-l-4 ' + 
-                        (tool.isFeatured 
-                          ? 'border-l-blue-500' 
-                          : tool.isScript 
-                            ? 'border-l-green-500' 
-                            : isDarkMode ? 'border-l-gray-600' : 'border-l-gray-300'
-                        )
-                      : 'hover:scale-[1.02] hover:shadow-2xl hover:-translate-y-1'
-                  } ${
-                    isDarkMode 
-                      ? 'bg-gray-800/50 border-gray-700/50 hover:border-blue-500/50' 
-                      : 'bg-white border-gray-200 hover:border-blue-400'
-                  } ${tool.isFeatured && viewMode === 'grid' ? 'ring-2 ring-blue-500/50' : ''}`}
+                  variants={fadeInUp}
+                  initial="initial"
+                  animate="animate"
+                  transition={{ delay: index * 0.03, duration: 0.3 }}
+                  whileHover={viewMode === 'grid' ? { scale: 1.02, y: -4 } : {}}
+                  whileTap={viewMode === 'grid' ? { scale: 0.98 } : {}}
                 >
+                  <Card
+                    role="article"
+                    aria-label={tool.name}
+                    className={`relative overflow-hidden transition-all duration-300 ease-out ${
+                      viewMode === 'list' 
+                        ? 'flex flex-row items-center gap-4 p-4 hover:shadow-lg border-l-4 ' + 
+                          (tool.isFeatured 
+                            ? 'border-l-blue-500' 
+                            : tool.isScript 
+                              ? 'border-l-green-500' 
+                              : isDarkMode ? 'border-l-gray-600' : 'border-l-gray-300'
+                          )
+                        : 'shadow-md hover:shadow-2xl'
+                    } ${
+                      isDarkMode 
+                        ? 'bg-gradient-to-br from-gray-800/80 to-gray-800/40 border-gray-700/50 hover:border-blue-500/50 backdrop-blur-sm' 
+                        : 'bg-gradient-to-br from-white to-gray-50/80 border-gray-200 hover:border-blue-400 shadow-sm'
+                    } ${tool.isFeatured && viewMode === 'grid' ? 'ring-2 ring-blue-500/50' : ''}`}
+                  >
                   {/* Featured badge */}
                   {tool.isFeatured && (
                     <div className="absolute top-2 right-2">
@@ -2587,12 +3497,19 @@ export default function SystemToolkitDashboard() {
                     )}
                   </CardContent>
                 </Card>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
             
             {/* No results */}
-            {filteredTools.length === 0 && (
-              <div className="text-center py-12">
+            <AnimatePresence>
+              {filteredTools.length === 0 && (
+                <motion.div 
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="text-center py-12"
+                >
                 <div className={`w-16 h-16 mx-auto rounded-full flex items-center justify-center mb-4 ${
                   isDarkMode ? 'bg-gray-800' : 'bg-gray-100'
                 }`}>
@@ -2602,8 +3519,9 @@ export default function SystemToolkitDashboard() {
                 <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
                   Try adjusting your search or filters
                 </p>
-              </div>
-            )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </Tabs>
         </main>
         
@@ -2646,7 +3564,9 @@ export default function SystemToolkitDashboard() {
         {/* Script Execution Dialog */}
         <Dialog open={showScriptModal} onOpenChange={setShowScriptModal}>
           <DialogContent className={`max-w-2xl max-h-[90vh] overflow-y-auto ${
-            isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'
+            isDarkMode 
+              ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' 
+              : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'
           }`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl">
@@ -2790,7 +3710,7 @@ export default function SystemToolkitDashboard() {
         
         {/* Keyboard Shortcuts Modal */}
         <Dialog open={showShortcuts} onOpenChange={setShowShortcuts}>
-          <DialogContent className={`max-w-md ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+          <DialogContent className={`max-w-md ${isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Keyboard className="w-5 h-5 text-blue-400" />
@@ -2840,7 +3760,7 @@ export default function SystemToolkitDashboard() {
         
         {/* Collections Modal */}
         <Dialog open={showCollectionsModal} onOpenChange={setShowCollectionsModal}>
-          <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+          <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Bookmark className="w-5 h-5 text-purple-400" />
@@ -2939,7 +3859,7 @@ export default function SystemToolkitDashboard() {
         
         {/* Statistics Modal */}
         <Dialog open={showStatsModal} onOpenChange={setShowStatsModal}>
-          <DialogContent className={`max-w-2xl ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+          <DialogContent className={`max-w-2xl ${isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-cyan-400" />
@@ -3050,7 +3970,7 @@ export default function SystemToolkitDashboard() {
         
         {/* Comparison Modal */}
         <Dialog open={showComparison} onOpenChange={setShowComparison}>
-          <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+          <DialogContent className={`max-w-4xl max-h-[90vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Filter className="w-5 h-5 text-green-400" />
@@ -3174,7 +4094,7 @@ export default function SystemToolkitDashboard() {
         
         {/* History Modal */}
         <Dialog open={showHistoryModal} onOpenChange={setShowHistoryModal}>
-          <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+          <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Clock className="w-5 h-5 text-amber-400" />
@@ -3246,7 +4166,7 @@ export default function SystemToolkitDashboard() {
         
         {/* Auto-Install Modal */}
         <Dialog open={showAutoInstallModal} onOpenChange={setShowAutoInstallModal}>
-          <DialogContent className={`max-w-lg ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+          <DialogContent className={`max-w-lg ${isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}`}>
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Zap className="w-5 h-5 text-purple-400" />
@@ -3424,9 +4344,227 @@ export default function SystemToolkitDashboard() {
           </DialogContent>
         </Dialog>
         
+        {/* Script Queue Modal - Phase 7 */}
+        <Dialog open={showScriptQueueModal} onOpenChange={setShowScriptQueueModal}>
+          <DialogContent className={`max-w-2xl max-h-[80vh] overflow-y-auto ${isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}`}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Terminal className="w-5 h-5 text-orange-400" />
+                Script Queue
+              </DialogTitle>
+              <DialogDescription>
+                Manage your script execution queue
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {scriptQueue.length === 0 ? (
+                <div className={`text-center py-8 ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  <Terminal className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                  <p>No scripts in queue</p>
+                  <p className="text-sm">Add scripts from tools to run them in batch</p>
+                </div>
+              ) : (
+                <>
+                  <div className="space-y-2">
+                    {scriptQueue.map(toolId => {
+                      const tool = TOOLS.find(t => t.id === toolId)
+                      if (!tool) return null
+                      return (
+                        <div key={toolId} className={`flex items-center justify-between p-3 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+                          <div className="flex items-center gap-3">
+                            <Terminal className="w-4 h-4 text-green-400" />
+                            <div>
+                              <p className="text-sm font-medium">{tool.name}</p>
+                              <p className={`text-xs font-mono ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                                {tool.scriptCommand?.substring(0, 40)}...
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300"
+                              onClick={() => removeFromScriptQueue(toolId)}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                  
+                  <div className="flex justify-between pt-4 border-t border-gray-700/30">
+                    <Button variant="outline" onClick={clearScriptQueue} className="text-red-400 hover:text-red-300">
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Clear All
+                    </Button>
+                    <Button onClick={runAllScriptsInQueue} disabled={isRunningBatchScripts} className="bg-green-600 hover:bg-green-700">
+                      {isRunningBatchScripts ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      ) : (
+                        <Play className="w-4 h-4 mr-2" />
+                      )}
+                      Run All Scripts
+                    </Button>
+                  </div>
+                </>
+              )}
+              
+              {/* Script Favorites */}
+              {scriptFavorites.length > 0 && (
+                <div className="pt-4 border-t border-gray-700/30">
+                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Star className="w-4 h-4 text-yellow-400" />
+                    Favorite Scripts
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {scriptFavorites.map(toolId => {
+                      const tool = TOOLS.find(t => t.id === toolId)
+                      if (!tool) return null
+                      return (
+                        <Badge key={toolId} variant="outline" className="cursor-pointer hover:bg-purple-600/20" onClick={() => addToScriptQueue(toolId)}>
+                          {tool.name}
+                        </Badge>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+              
+              {/* Script History */}
+              {scriptHistory.length > 0 && (
+                <div className="pt-4 border-t border-gray-700/30">
+                  <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-amber-400" />
+                    Recent Scripts
+                  </h4>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {scriptHistory.slice(0, 5).map((entry, index) => {
+                      const tool = TOOLS.find(t => t.id === entry.toolId)
+                      if (!tool) return null
+                      return (
+                        <div key={index} className={`flex items-center justify-between p-2 rounded ${isDarkMode ? 'bg-gray-800/30' : 'bg-gray-100/50'}`}>
+                          <span className="text-xs">{tool.name}</span>
+                          <Badge variant="outline" className={`text-xs ${entry.status === 'success' ? 'text-green-400' : entry.status === 'error' ? 'text-red-400' : 'text-yellow-400'}`}>
+                            {entry.status}
+                          </Badge>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Backup/Restore Modal - Phase 8 */}
+        <Dialog open={showBackupModal} onOpenChange={setShowBackupModal}>
+          <DialogContent className={`max-w-md ${isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}`}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Download className="w-5 h-5 text-violet-400" />
+                Backup & Restore
+              </DialogTitle>
+              <DialogDescription>
+                Export or import your toolkit data
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {/* Backup Options */}
+              <div className="space-y-2">
+                <h4 className="text-sm font-semibold">Include in Backup:</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    { key: 'includeFavorites', label: 'Favorites' },
+                    { key: 'includeCollections', label: 'Collections' },
+                    { key: 'includeHistory', label: 'History' },
+                    { key: 'includeScriptFavorites', label: 'Script Favorites' },
+                    { key: 'includeScriptHistory', label: 'Script History' },
+                    { key: 'includeSettings', label: 'Settings' },
+                  ].map(option => (
+                    <label key={option.key} className={`flex items-center gap-2 p-2 rounded cursor-pointer ${isDarkMode ? 'hover:bg-gray-800' : 'hover:bg-gray-100'}`}>
+                      <input
+                        type="checkbox"
+                        checked={backupSettings[option.key as keyof typeof backupSettings]}
+                        onChange={(e) => setBackupSettings(prev => ({ ...prev, [option.key]: e.target.checked }))}
+                        className="rounded"
+                      />
+                      <span className="text-sm">{option.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <Button onClick={exportDataWithOptions} className="flex-1 bg-violet-600 hover:bg-violet-700">
+                  <Download className="w-4 h-4 mr-2" />
+                  Export
+                </Button>
+                <label className="flex-1">
+                  <Button variant="outline" className="w-full" asChild>
+                    <span>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Import
+                    </span>
+                  </Button>
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={importDataWithOptions}
+                    className="hidden"
+                  />
+                </label>
+              </div>
+              
+              <p className={`text-xs text-center ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                Backups are stored as JSON files and can be imported on any device
+              </p>
+            </div>
+          </DialogContent>
+        </Dialog>
+        
+        {/* Risky Script Confirmation Dialog - Phase 10 */}
+        <AlertDialog open={!!pendingRiskyAction} onOpenChange={(open) => !open && cancelRiskyAction()}>
+          <AlertDialogContent className={isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                Risk Level: {pendingRiskyAction?.tool.risk}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                <p className="mb-2">
+                  <strong>{pendingRiskyAction?.tool.name}</strong> has a <strong>{pendingRiskyAction?.tool.risk}</strong> risk level.
+                </p>
+                <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                  {pendingRiskyAction?.tool.risk === 'advanced' 
+                    ? 'This tool makes advanced system changes. Use with caution and create a restore point first.'
+                    : 'This tool modifies system settings. Review changes before applying.'}
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className={isDarkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : ''}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmRiskyAction}
+                className="bg-yellow-600 hover:bg-yellow-700 text-white"
+              >
+                Continue
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
         {/* Confirmation Dialog */}
         <AlertDialog open={confirmDialog?.isOpen} onOpenChange={(open) => !open && closeConfirmation()}>
-          <AlertDialogContent className={isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}>
+          <AlertDialogContent className={isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}>
             <AlertDialogHeader>
               <AlertDialogTitle className="flex items-center gap-2">
                 {confirmDialog?.variant === 'danger' ? (
@@ -3452,6 +4590,87 @@ export default function SystemToolkitDashboard() {
                 }
               >
                 {confirmDialog?.variant === 'danger' ? 'Delete' : 'Confirm'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
+        {/* Error Modal with Retry - Phase 4 */}
+        <AlertDialog open={showErrorModal} onOpenChange={setShowErrorModal}>
+          <AlertDialogContent className={isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-400" />
+                Error Occurred
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                  {currentError}
+                </p>
+                {errorLog.length > 0 && (
+                  <p className={`mt-2 text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                    {errorLog.length} error(s) logged this session
+                  </p>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className={isDarkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : ''}>
+                Dismiss
+              </AlertDialogCancel>
+              {retryAction && (
+                <AlertDialogAction
+                  onClick={handleRetry}
+                  className="bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Retry
+                </AlertDialogAction>
+              )}
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        
+        {/* Session Timeout Warning with Countdown - Phase 4 */}
+        <AlertDialog open={showSessionWarning} onOpenChange={setShowSessionWarning}>
+          <AlertDialogContent className={isDarkMode ? 'bg-gray-900/95 border-gray-700/50 backdrop-blur-xl shadow-2xl' : 'bg-white/95 border-gray-200/50 backdrop-blur-xl shadow-2xl'}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Clock className="w-5 h-5 text-amber-400" />
+                Session Timeout Warning
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                <p className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                  Your session will expire soon due to inactivity.
+                </p>
+                <div className={`mt-4 p-4 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                  <div className="flex items-center justify-center gap-2">
+                    <span className="text-3xl font-mono font-bold text-amber-400">
+                      {Math.floor((SESSION_TIMEOUT_MS - (Date.now() - (session?.lastActivity || 0))) / 60000)}
+                    </span>
+                    <span className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                      minutes remaining
+                    </span>
+                  </div>
+                </div>
+                <p className={`mt-2 text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
+                  Click "Extend Session" to stay logged in for another 30 minutes.
+                </p>
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel 
+                onClick={handleLogout}
+                className={isDarkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : ''}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={extendSession}
+                className="bg-green-600 hover:bg-green-700 text-white"
+              >
+                Extend Session
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
