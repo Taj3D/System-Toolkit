@@ -209,8 +209,7 @@ async function sendWelcomeEmail(order: {
     } else {
       const errorText = await response.text();
       console.error('⚠️ Email failed:', response.status, errorText);
-      // Return error details for debugging
-      return { success: false, status: response.status, error: errorText } as any;
+      return false;
     }
   } catch (error) {
     console.error('⚠️ Email error:', error);
@@ -369,8 +368,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Send welcome email to customer
-    let emailSent: any = false;
-    let emailError = null;
+    let emailSent = false;
     if (email) {
       emailSent = await sendWelcomeEmail({
         id: orderId,
@@ -380,10 +378,6 @@ export async function POST(request: NextRequest) {
         plan,
         amount
       });
-      if (typeof emailSent === 'object' && emailSent.success === false) {
-        emailError = emailSent;
-        emailSent = false;
-      }
     }
 
     // Send admin notification
@@ -401,14 +395,8 @@ export async function POST(request: NextRequest) {
       orderId: orderId,
       message: 'Order created successfully',
       emailSent,
-      emailError,
       googleSheetsSync: sheetsSync,
-      dbSaved,
-      debug: {
-        hasApiKey: !!BREVO_API_KEY,
-        apiKeyLength: BREVO_API_KEY.length,
-        hasEmail: !!email
-      }
+      dbSaved
     });
 
   } catch (error) {
