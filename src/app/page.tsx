@@ -119,6 +119,13 @@ const TOOLS: Tool[] = [
   { id: 'w20', name: 'BleachBit', description: 'Clean your system and free disk space.', category: 'Cleanup', platform: 'windows', url: 'https://www.bleachbit.org/', risk: 'moderate', rating: 4.5, downloads: '8M+', tags: ['cleanup', 'privacy', 'free-space'] },
   { id: 'w21', name: 'Geek Uninstaller', description: 'Efficient and fast small uninstaller.', category: 'Uninstaller', platform: 'windows', url: 'https://geekuninstaller.com/', risk: 'safe', rating: 4.6, downloads: '3M+', tags: ['uninstaller', 'lightweight', 'portable'] },
   { id: 'w22', name: 'Tron Script', description: 'Automatic system cleanup and repair script for Windows.', category: 'System Repair', platform: 'windows', url: 'https://github.com/bmrf/tron', risk: 'advanced', rating: 4.4, downloads: '2M+', tags: ['repair', 'cleanup', 'automation'] },
+  { id: 'w23', name: 'System File Checker (SFC)', description: 'Scan and restore corrupted Windows system files. Essential for system stability.', category: 'System Repair', platform: 'windows', url: 'https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/sfc', risk: 'safe', rating: 5, downloads: '50M+', tags: ['repair', 'system-files', 'essential'], isScript: true, scriptCommand: 'sfc /scannow', isFeatured: true },
+  { id: 'w24', name: 'Disk Check (CHKDSK)', description: 'Check disk for errors and bad sectors. Repairs file system issues.', category: 'Diagnostics', platform: 'windows', url: 'https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/chkdsk', risk: 'safe', rating: 4.9, downloads: '30M+', tags: ['disk', 'repair', 'diagnostics'], isScript: true, scriptCommand: 'chkdsk /r' },
+  { id: 'w25', name: 'DISM System Repair', description: 'Repair Windows image and component store. Fixes Windows Update issues.', category: 'System Repair', platform: 'windows', url: 'https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/dism-operating-system-package-servicing-command-line-options', risk: 'safe', rating: 4.8, downloads: '20M+', tags: ['repair', 'windows-update', 'system'], isScript: true, scriptCommand: 'dism.exe /online /cleanup-image /restorehealth && dism.exe /online /cleanup-image /startcomponentcleanup' },
+  { id: 'w26', name: 'Windows Server Setup', description: 'Convert Windows 11 to Windows Server edition. Advanced setup tool.', category: 'System Setup', platform: 'windows', url: 'https://learn.microsoft.com/en-us/windows-server/', risk: 'advanced', rating: 4.5, downloads: '1M+', tags: ['server', 'setup', 'advanced'], isScript: true, scriptCommand: 'C:\\Win11\\setup.exe /product server', isNew: true },
+  { id: 'w27', name: 'Windows Activation (MAS)', description: 'Open-source Windows and Office activator. HWID and KMS activation.', category: 'Activation', platform: 'windows', url: 'https://github.com/massgravel/Microsoft-Activation-Scripts', risk: 'advanced', rating: 5, downloads: '15M+', tags: ['activation', 'windows', 'office'], isScript: true, scriptCommand: 'irm https://get.activated.win | iex', isFeatured: true },
+  { id: 'w28', name: 'RaphiRe Debloat', description: 'Modern Windows debloat tool. Clean, fast, and effective.', category: 'System Optimization', platform: 'windows', url: 'https://github.com/Raphire/Win11Debloat', risk: 'safe', rating: 4.9, downloads: '500K+', tags: ['debloat', 'privacy', 'performance'], isScript: true, scriptCommand: '& ([scriptblock]::Create((irm "https://debloat.raphi.re/")))', isNew: true },
+  { id: 'w29', name: 'Chris Titus Dev Tool', description: 'Windows Dev utility for advanced system management and tweaks.', category: 'System Optimization', platform: 'windows', url: 'https://github.com/ChrisTitusTech/winutil', risk: 'safe', rating: 4.9, downloads: '3M+', tags: ['dev', 'tweaks', 'optimization'], isScript: true, scriptCommand: 'irm "https://christitus.com/windev" | iex' },
 
   // macOS Tools
   { id: 'm1', name: 'AppCleaner', description: 'Completely uninstall apps from your Mac.', category: 'Uninstaller', platform: 'macos', url: 'https://freemacsoft.net/appcleaner/', risk: 'safe', rating: 4.9, downloads: '5M+', tags: ['uninstaller', 'cleanup'], isFeatured: true },
@@ -1643,6 +1650,42 @@ export default function SystemToolkitDashboard() {
                   >
                     <Shield className="w-4 h-4 mr-2" />
                     Privacy Settings
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-red-500/50 text-red-300 hover:bg-red-600/20' : 'border-red-300 text-red-600 hover:bg-red-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w23')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <HardDrive className="w-4 h-4 mr-2" />
+                    SFC Scan
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-amber-500/50 text-amber-300 hover:bg-amber-600/20' : 'border-amber-300 text-amber-600 hover:bg-amber-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w25')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    DISM Repair
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-teal-500/50 text-teal-300 hover:bg-teal-600/20' : 'border-teal-300 text-teal-600 hover:bg-teal-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w28')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    RaphiRe Debloat
                   </Button>
                 </div>
               </div>

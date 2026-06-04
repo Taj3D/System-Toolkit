@@ -1,0 +1,13 @@
+sfc /scannow
+
+chkdsk /r
+
+dism.exe /online /cleanup-image /scanhealth
+
+dism.exe /online /cleanup-image /restorehealth
+
+dism /online /cleanup-image /startcomponentcleanup
+
+Dism.exe /Online /Cleanup-Image /AnalyzeComponentStore
+
+Dism.exe /Online /Cleanup-Image /AnalyzeComponentStore

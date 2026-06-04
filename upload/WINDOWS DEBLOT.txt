@@ -1,0 +1,8 @@
+& ([scriptblock]::Create((irm "https://debloat.raphi.re/")))
+
+iwr -useb https://git.io/debloat|iex
+
+irm "https://christitus.com/win" | iex
+
+irm "https://christitus.com/windev" | iex
+
