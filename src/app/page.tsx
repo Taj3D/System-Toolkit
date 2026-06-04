@@ -17,8 +17,8 @@ import {
   Terminal, Cpu, HardDrive, Wifi, Battery, Globe, Smartphone, Tablet,
   ChevronUp, Heart, Bookmark, Share2, RefreshCw, Clock, User, LogOut,
   KeyRound, Fingerprint, Eye, EyeOff, Sparkles, Award, TrendingUp,
-  Package, Wrench, ScrewDriver, Bug, Virus, ShieldCheck, ShieldAlert,
-  Play, Pause, RotateCcw, CheckCircle2, XCircle, Loader2, Keyboard
+  Laptop, Play, Pause, RotateCcw, CheckCircle2, XCircle, Loader2, Keyboard,
+  Grid, List, SortAsc, Filter, X, Plus, Minus, ChevronDown, MoreVertical
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -37,6 +37,8 @@ interface Tool {
   isScript?: boolean
   scriptCommand?: string
   scriptInstructions?: string[]
+  lastUpdated?: string
+  author?: string
   isNew?: boolean
   isFeatured?: boolean
 }
@@ -49,9 +51,14 @@ interface UserSession {
 }
 
 // ============ CONSTANTS ============
-const MASTER_PASSWORD = 'admin123' // In production, use proper auth
-const SESSION_TIMEOUT = 30 * 60 * 1000 // 30 minutes
-const ACTIVITY_CHECK_INTERVAL = 60 * 1000 // 1 minute
+// Password from environment variable for security (fallback for demo)
+const MASTER_PASSWORD = process.env.NEXT_PUBLIC_MASTER_PASSWORD || 'admin123'
+
+// Time constants
+const SESSION_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
+const ACTIVITY_CHECK_INTERVAL_MS = 60 * 1000 // 1 minute
+const COPY_SUCCESS_DURATION_MS = 2000 // 2 seconds
+const SCRIPT_PROGRESS_INTERVAL_MS = 200 // 200ms
 
 const PLATFORMS = [
   { id: 'windows', name: 'Windows', icon: Monitor, color: 'from-blue-500 to-cyan-500' },
@@ -182,8 +189,10 @@ export default function SystemToolkitDashboard() {
   const [isDarkMode, setIsDarkMode] = useState(true)
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [favorites, setFavorites] = useState<string[]>([])
-  const [selectedTools, setSelectedTools] = useState<string[]>([])
-  const [showComparison, setShowComparison] = useState(false)
+  const [isLoadingSession, setIsLoadingSession] = useState(true)
+  const [sessionTime, setSessionTime] = useState(0)
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
+  const [sortBy, setSortBy] = useState<'name' | 'rating' | 'downloads'>('rating')
   
   // Script Execution State
   const [executingScript, setExecutingScript] = useState<string | null>(null)
@@ -198,26 +207,61 @@ export default function SystemToolkitDashboard() {
   
   // Check session on mount
   useEffect(() => {
-    const savedSession = localStorage.getItem('toolkit_session')
-    if (savedSession) {
-      const parsed = JSON.parse(savedSession) as UserSession
-      if (Date.now() - parsed.lastActivity < SESSION_TIMEOUT) {
-        setSession(parsed)
-      } else {
-        localStorage.removeItem('toolkit_session')
+    try {
+      const savedSession = localStorage.getItem('toolkit_session')
+      if (savedSession) {
+        try {
+          const parsed = JSON.parse(savedSession) as UserSession
+          // Validate parsed object has required fields
+          if (parsed.isAuthenticated && parsed.lastActivity && parsed.loginTime) {
+            if (Date.now() - parsed.lastActivity < SESSION_TIMEOUT_MS) {
+              setSession(parsed)
+            } else {
+              localStorage.removeItem('toolkit_session')
+            }
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse session:', parseError)
+          localStorage.removeItem('toolkit_session')
+        }
       }
-    }
-    
-    const savedFavorites = localStorage.getItem('toolkit_favorites')
-    if (savedFavorites) {
-      setFavorites(JSON.parse(savedFavorites))
-    }
-    
-    const savedTheme = localStorage.getItem('toolkit_theme')
-    if (savedTheme !== null) {
-      setIsDarkMode(savedTheme === 'dark')
+      
+      const savedFavorites = localStorage.getItem('toolkit_favorites')
+      if (savedFavorites) {
+        try {
+          const parsedFavorites = JSON.parse(savedFavorites)
+          if (Array.isArray(parsedFavorites)) {
+            setFavorites(parsedFavorites)
+          }
+        } catch (parseError) {
+          console.warn('Failed to parse favorites:', parseError)
+          localStorage.removeItem('toolkit_favorites')
+        }
+      }
+      
+      const savedTheme = localStorage.getItem('toolkit_theme')
+      if (savedTheme !== null) {
+        setIsDarkMode(savedTheme === 'dark')
+      }
+    } catch (error) {
+      console.error('Error loading session data:', error)
+    } finally {
+      setIsLoadingSession(false)
     }
   }, [])
+  
+  // Session timer update
+  useEffect(() => {
+    if (!session) return
+    
+    const updateTimer = () => {
+      setSessionTime(Math.round((Date.now() - session.loginTime) / 60000))
+    }
+    
+    updateTimer()
+    const interval = setInterval(updateTimer, 60000)
+    return () => clearInterval(interval)
+  }, [session])
   
   // Logout handler - defined first as it's used in useEffect
   const handleLogout = useCallback(() => {
@@ -235,10 +279,18 @@ export default function SystemToolkitDashboard() {
     if (!session) return
     
     const interval = setInterval(() => {
-      if (Date.now() - session.lastActivity > SESSION_TIMEOUT) {
-        handleLogout()
+      const storedSession = localStorage.getItem('toolkit_session')
+      if (storedSession) {
+        try {
+          const parsed = JSON.parse(storedSession) as UserSession
+          if (Date.now() - parsed.lastActivity > SESSION_TIMEOUT_MS) {
+            handleLogout()
+          }
+        } catch {
+          // Ignore parse errors in interval
+        }
       }
-    }, ACTIVITY_CHECK_INTERVAL)
+    }, ACTIVITY_CHECK_INTERVAL_MS)
     
     return () => clearInterval(interval)
   }, [session, handleLogout])
@@ -350,20 +402,45 @@ export default function SystemToolkitDashboard() {
       const newFavorites = prev.includes(toolId)
         ? prev.filter(id => id !== toolId)
         : [...prev, toolId]
-      localStorage.setItem('toolkit_favorites', JSON.stringify(newFavorites))
+      try {
+        localStorage.setItem('toolkit_favorites', JSON.stringify(newFavorites))
+      } catch (e) {
+        console.warn('Failed to save favorites:', e)
+      }
       return newFavorites
     })
   }, [updateActivity])
   
-  // Copy to clipboard
-  const copyToClipboard = useCallback((text: string, id: string) => {
-    navigator.clipboard.writeText(text)
-    setCopiedId(id)
-    setTimeout(() => setCopiedId(null), 2000)
-    toast({
-      title: '📋 Copied!',
-      description: 'Command copied to clipboard'
-    })
+  // Copy to clipboard with fallback for older browsers
+  const copyToClipboard = useCallback(async (text: string, id: string) => {
+    try {
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(text)
+      } else {
+        // Fallback for older browsers or non-HTTPS contexts
+        const textarea = document.createElement('textarea')
+        textarea.value = text
+        textarea.style.position = 'fixed'
+        textarea.style.opacity = '0'
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+      }
+      setCopiedId(id)
+      setTimeout(() => setCopiedId(null), COPY_SUCCESS_DURATION_MS)
+      toast({
+        title: '📋 Copied!',
+        description: 'Command copied to clipboard'
+      })
+    } catch (error) {
+      console.error('Copy failed:', error)
+      toast({
+        variant: 'destructive',
+        title: '❌ Copy Failed',
+        description: 'Could not copy to clipboard'
+      })
+    }
   }, [toast])
   
   // Execute script simulation
@@ -396,12 +473,15 @@ export default function SystemToolkitDashboard() {
         }
         return prev + 10
       })
-    }, 200)
+    }, SCRIPT_PROGRESS_INTERVAL_MS)
+    
+    // Return cleanup function for potential abort
+    return () => clearInterval(interval)
   }, [toast])
   
-  // Filter tools
+  // Filter and sort tools
   const filteredTools = useMemo(() => {
-    return TOOLS.filter(tool => {
+    const filtered = TOOLS.filter(tool => {
       const matchesPlatform = tool.platform === activeTab
       const matchesSearch = searchQuery === '' || 
         tool.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -424,13 +504,41 @@ export default function SystemToolkitDashboard() {
       
       return matchesPlatform && matchesSearch && matchesCategory && matchesQuickFilter && matchesRisk
     })
-  }, [activeTab, searchQuery, selectedCategory, quickFilter, riskFilter, favorites])
+    
+    // Sort the filtered results
+    return filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'name':
+          return a.name.localeCompare(b.name)
+        case 'downloads':
+          // Extract numeric value from downloads string (e.g., "2M+" -> 2000000)
+          const parseDownloads = (d: string) => {
+            const match = d.match(/(\d+\.?\d*)([KM]?)/i)
+            if (!match) return 0
+            const num = parseFloat(match[1])
+            const mult = match[2].toUpperCase() === 'M' ? 1000000 : match[2].toUpperCase() === 'K' ? 1000 : 1
+            return num * mult
+          }
+          return parseDownloads(b.downloads) - parseDownloads(a.downloads)
+        case 'rating':
+        default:
+          return b.rating - a.rating
+      }
+    })
+  }, [activeTab, searchQuery, selectedCategory, quickFilter, riskFilter, favorites, sortBy])
   
   // Get categories for current platform
   const categories = useMemo(() => {
     const cats = new Set(TOOLS.filter(t => t.platform === activeTab).map(t => t.category))
     return Array.from(cats).sort()
   }, [activeTab])
+  
+  // Reset category when platform changes if current category doesn't exist
+  useEffect(() => {
+    if (selectedCategory && !categories.includes(selectedCategory)) {
+      setSelectedCategory(null)
+    }
+  }, [activeTab, categories, selectedCategory])
   
   // Get risk color
   const getRiskColor = (risk: Tool['risk']) => {
@@ -456,6 +564,23 @@ export default function SystemToolkitDashboard() {
   }
   
   // ============ LOGIN SCREEN ============
+  if (isLoadingSession) {
+    return (
+      <div className={`min-h-screen flex items-center justify-center p-4 ${
+        isDarkMode 
+          ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900' 
+          : 'bg-gradient-to-br from-slate-100 via-white to-slate-100'
+      }`}>
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
+          <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+            Restoring session...
+          </p>
+        </div>
+      </div>
+    )
+  }
+  
   if (!session?.isAuthenticated) {
     return (
       <div className={`min-h-screen flex items-center justify-center p-4 ${
@@ -583,6 +708,7 @@ export default function SystemToolkitDashboard() {
         onClick={updateActivity}
         onMouseMove={updateActivity}
         onKeyDown={updateActivity}
+        onScroll={updateActivity}
       >
         {/* Background effects */}
         <div className="fixed inset-0 overflow-hidden pointer-events-none">
@@ -612,7 +738,7 @@ export default function SystemToolkitDashboard() {
                 <div>
                   <h1 className="font-bold text-lg">System Toolkit</h1>
                   <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                    86+ Tools • Cross-Platform
+                    {TOOLS.length}+ Tools • Cross-Platform
                   </p>
                 </div>
               </div>
@@ -780,21 +906,50 @@ export default function SystemToolkitDashboard() {
                 ))}
               </div>
               
-              <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-1">
+                {/* Sort Options */}
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="h-7 text-xs"
-                      onClick={() => setShowShortcuts(true)}
+                      onClick={() => setSortBy(prev => prev === 'rating' ? 'name' : prev === 'name' ? 'downloads' : 'rating')}
                     >
-                      <Keyboard className="w-3 h-3 mr-1" />
-                      Shortcuts
+                      <SortAsc className="w-3 h-3 mr-1" />
+                      {sortBy === 'rating' ? 'Rating' : sortBy === 'name' ? 'Name' : 'Downloads'}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>Press ? for keyboard shortcuts</TooltipContent>
+                  <TooltipContent>Sort by {sortBy === 'rating' ? 'Rating' : sortBy === 'name' ? 'Name' : 'Downloads'}</TooltipContent>
                 </Tooltip>
+                
+                {/* View Mode Toggle */}
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 text-xs"
+                      onClick={() => setViewMode(prev => prev === 'grid' ? 'list' : 'grid')}
+                    >
+                      {viewMode === 'grid' ? <List className="w-3 h-3 mr-1" /> : <Grid className="w-3 h-3 mr-1" />}
+                      {viewMode === 'grid' ? 'List' : 'Grid'}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Toggle {viewMode === 'grid' ? 'List' : 'Grid'} View</TooltipContent>
+                </Tooltip>
+                
+                <Separator orientation="vertical" className="h-6 mx-1" />
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => setShowShortcuts(true)}
+                >
+                  <Keyboard className="w-3 h-3 mr-1" />
+                  Shortcuts
+                </Button>
               </div>
             </div>
             
@@ -833,8 +988,11 @@ export default function SystemToolkitDashboard() {
               {selectedCategory && ` in ${selectedCategory}`}
             </p>
             
-            {/* Tools Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Tools Grid/List */}
+            <div className={viewMode === 'grid' 
+              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' 
+              : 'flex flex-col gap-3'
+            }>
               {filteredTools.map(tool => (
                 <Card
                   key={tool.id}
@@ -842,7 +1000,9 @@ export default function SystemToolkitDashboard() {
                     isDarkMode 
                       ? 'bg-gray-800/50 border-gray-700/50 hover:border-blue-500/50' 
                       : 'bg-white border-gray-200 hover:border-blue-400'
-                  } ${tool.isFeatured ? 'ring-2 ring-blue-500/50' : ''}`}
+                  } ${tool.isFeatured ? 'ring-2 ring-blue-500/50' : ''} ${
+                    viewMode === 'list' ? 'flex flex-row items-center p-4' : ''
+                  }`}
                 >
                   {/* Featured badge */}
                   {tool.isFeatured && (
@@ -1035,7 +1195,7 @@ export default function SystemToolkitDashboard() {
                   {TOOLS.length} tools • 6 platforms
                 </span>
                 <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
-                  Session: {Math.round((Date.now() - session.loginTime) / 60000)} min
+                  Session: {sessionTime} min
                 </span>
               </div>
             </div>
@@ -1238,23 +1398,5 @@ export default function SystemToolkitDashboard() {
         </Dialog>
       </div>
     </TooltipProvider>
-  )
-}
-
-// Missing Laptop icon - define inline
-function Laptop({ className }: { className?: string }) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round"
-      className={className}
-    >
-      <path d="M20 16V7a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v9m16 0H4m16 0 1.28 2.55a1 1 0 0 1-.9 1.45H3.62a1 1 0 0 1-.9-1.45L4 16"/>
-    </svg>
   )
 }
