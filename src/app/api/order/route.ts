@@ -14,12 +14,11 @@ const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL ||
 const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY || '';
 
 // ============ EMAIL CONFIGURATION ============
-// Using Resend API (Free tier: 3000 emails/month)
+// Using Resend API with verified domain system-toolkit.vercel.app
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-// Use onboarding@resend.dev for testing, or your verified domain for production
-const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
-// For testing: Resend free tier only allows sending to your registered email
-// Set this to your Resend account email for testing, or leave empty for production
+// Sender email from verified domain
+const EMAIL_FROM = process.env.EMAIL_FROM || 'orders@system-toolkit.vercel.app';
+// Customer email (actual recipient in production)
 const VERIFIED_EMAIL = process.env.VERIFIED_EMAIL || 'conceptbd.net@gmail.com';
 
 // ============ PLAN NAMES ============
@@ -42,24 +41,30 @@ async function sendToGoogleSheets(order: {
   // Method 1: Using Apps Script Webhook (Simple)
   if (GOOGLE_SHEETS_WEBHOOK_URL) {
     try {
+      const payload = {
+        timestamp: order.createdAt.toISOString(),
+        orderId: order.id,
+        name: order.name,
+        mobile: order.mobile,
+        email: order.email || 'N/A',
+        plan: PLAN_NAMES[order.plan] || order.plan,
+        amount: order.amount,
+        status: 'pending'
+      };
+
+      // Google Apps Script requires redirect follow for POST
       const response = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          timestamp: order.createdAt.toISOString(),
-          orderId: order.id,
-          name: order.name,
-          mobile: order.mobile,
-          email: order.email || 'N/A',
-          plan: PLAN_NAMES[order.plan] || order.plan,
-          amount: order.amount,
-          status: 'pending'
-        })
+        body: JSON.stringify(payload),
+        redirect: 'follow'
       });
-      if (response.ok) {
+
+      const responseText = await response.text();
+      if (response.ok || responseText.includes('success')) {
         console.log('✅ Sent to Google Sheets via Webhook');
       } else {
-        console.error('⚠️ Google Sheets response:', response.status);
+        console.error('⚠️ Google Sheets response:', response.status, responseText);
       }
     } catch (error) {
       console.error('⚠️ Google Sheets Webhook error:', error);
