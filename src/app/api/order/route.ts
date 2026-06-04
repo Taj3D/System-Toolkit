@@ -1,31 +1,35 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import nodemailer from 'nodemailer';
 
 // ============ GOOGLE SHEETS CONFIGURATION ============
-// Option 1: Google Apps Script Webhook (Simple & Free)
-// Create a Google Sheet, then Apps Script with doPost() function
-// Deploy as Web App and paste the URL below
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
 
-// Option 2: Google Sheets API (For Production)
-// Requires Google Cloud Service Account
-const GOOGLE_SHEETS_ID = process.env.GOOGLE_SHEETS_ID || '';
-const GOOGLE_SERVICE_ACCOUNT_EMAIL = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || '';
-const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY || '';
-
-// ============ EMAIL CONFIGURATION ============
-// Using Resend API with verified domain system-toolkit.vercel.app
-const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-// Sender email from verified domain
-const EMAIL_FROM = process.env.EMAIL_FROM || 'orders@system-toolkit.vercel.app';
-// Customer email (actual recipient in production)
-const VERIFIED_EMAIL = process.env.VERIFIED_EMAIL || 'conceptbd.net@gmail.com';
+// ============ BREVO SMTP CONFIGURATION ============
+const SMTP_HOST = process.env.SMTP_HOST || 'smtp-relay.brevo.com';
+const SMTP_PORT = parseInt(process.env.SMTP_PORT || '587');
+const SMTP_USER = process.env.SMTP_USER || 'ad9b67001@smtp-brevo.com';
+const SMTP_PASS = process.env.SMTP_PASS || '6hzbQEZBgU7SFCt8';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'conceptbd.net@gmail.com';
 
 // ============ PLAN NAMES ============
 const PLAN_NAMES: Record<string, string> = {
   basic: 'বেসিক',
   professional: 'প্রফেশনাল',
   enterprise: 'এন্টারপ্রাইজ'
+};
+
+// ============ EMAIL TRANSPORTER ============
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: SMTP_HOST,
+    port: SMTP_PORT,
+    secure: false,
+    auth: {
+      user: SMTP_USER,
+      pass: SMTP_PASS
+    }
+  });
 };
 
 // ============ GOOGLE SHEETS FUNCTIONS ============
@@ -38,46 +42,42 @@ async function sendToGoogleSheets(order: {
   amount: number;
   createdAt: Date;
 }) {
-  // Method 1: Using Apps Script Webhook (Simple)
-  if (GOOGLE_SHEETS_WEBHOOK_URL) {
-    try {
-      const payload = {
-        timestamp: order.createdAt.toISOString(),
-        orderId: order.id,
-        name: order.name,
-        mobile: order.mobile,
-        email: order.email || 'N/A',
-        plan: PLAN_NAMES[order.plan] || order.plan,
-        amount: order.amount,
-        status: 'pending'
-      };
-
-      // Google Apps Script requires redirect follow for POST
-      const response = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-        redirect: 'follow'
-      });
-
-      const responseText = await response.text();
-      if (response.ok || responseText.includes('success')) {
-        console.log('✅ Sent to Google Sheets via Webhook');
-      } else {
-        console.error('⚠️ Google Sheets response:', response.status, responseText);
-      }
-    } catch (error) {
-      console.error('⚠️ Google Sheets Webhook error:', error);
-    }
-  } else {
+  if (!GOOGLE_SHEETS_WEBHOOK_URL) {
     console.log('⚠️ Google Sheets Webhook URL not configured');
+    return false;
   }
 
-  // Method 2: Using Google Sheets API (Production)
-  // This requires setting up Google Cloud Service Account
-  // Implementation would use googleapis package
-  
-  return true;
+  try {
+    const payload = {
+      timestamp: order.createdAt.toISOString(),
+      orderId: order.id,
+      name: order.name,
+      mobile: order.mobile,
+      email: order.email || 'N/A',
+      plan: PLAN_NAMES[order.plan] || order.plan,
+      amount: order.amount,
+      status: 'pending'
+    };
+
+    const response = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+      redirect: 'follow'
+    });
+
+    const responseText = await response.text();
+    if (response.ok || responseText.includes('success')) {
+      console.log('✅ Sent to Google Sheets via Webhook');
+      return true;
+    } else {
+      console.error('⚠️ Google Sheets response:', response.status, responseText);
+      return false;
+    }
+  } catch (error) {
+    console.error('⚠️ Google Sheets Webhook error:', error);
+    return false;
+  }
 }
 
 // ============ EMAIL FUNCTIONS ============
@@ -89,107 +89,113 @@ async function sendWelcomeEmail(order: {
   plan: string;
   amount: number;
 }) {
-  if (!order.email || !RESEND_API_KEY) {
-    console.log('⚠️ No email or API key, skipping email');
+  if (!order.email) {
+    console.log('⚠️ No email provided, skipping email');
     return false;
   }
 
-  // For testing: Resend free tier only allows sending to verified email
-  // In production with verified domain, this will send to the actual customer
-  const recipientEmail = VERIFIED_EMAIL || order.email;
-  
-  console.log(`📧 Sending email to: ${recipientEmail} (customer: ${order.email})`);
+  console.log(`📧 Sending email to: ${order.email}`);
 
-  try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        from: EMAIL_FROM,
-        to: recipientEmail,
-        subject: '🎉 অর্ডার সফল - System Toolkit',
-        html: `
-          <div style="font-family: 'Hind Siliguri', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 20px;">
-            <div style="background: white; border-radius: 15px; padding: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
-              <div style="text-align: center; margin-bottom: 30px;">
-                <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px; display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px;">
-                  <span style="font-size: 40px;">✅</span>
-                </div>
-                <h1 style="color: #1a1a2e; margin: 0; font-size: 28px;">অর্ডার সফল!</h1>
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;600;700&display=swap');
+        body { font-family: 'Hind Siliguri', Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; }
+        .header h1 { color: white; margin: 0; font-size: 28px; }
+        .header p { color: rgba(255,255,255,0.9); margin: 10px 0 0 0; }
+        .content { padding: 30px; }
+        .order-box { background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; }
+        .order-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .order-row:last-child { border-bottom: none; }
+        .payment-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .whatsapp-btn { display: inline-block; background: #25D366; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px; color: #888; font-size: 13px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="card">
+          <div class="header">
+            <h1>🎉 অর্ডার সফল!</h1>
+            <p>আপনার অর্ডার গৃহীত হয়েছে</p>
+          </div>
+          
+          <div class="content">
+            <p style="font-size: 16px; color: #333;">
+              প্রিয় <strong>${order.name}</strong>,
+            </p>
+            
+            <p style="color: #555; line-height: 1.8;">
+              আপনার <strong>System Toolkit</strong> অর্ডার সফলভাবে গৃহীত হয়েছে। পেমেন্ট সম্পন্ন করার পর ১ ঘন্টার মধ্যে আপনি সফটওয়্যার অ্যাক্সেস পাবেন।
+            </p>
+            
+            <div class="order-box">
+              <h3 style="margin: 0 0 15px 0; color: #667eea;">📦 অর্ডার বিবরণ</h3>
+              <div class="order-row">
+                <span>অর্ডার আইডি:</span>
+                <strong>#${order.id.slice(-8).toUpperCase()}</strong>
               </div>
-              
-              <p style="color: #333; font-size: 16px; line-height: 1.6;">
-                প্রিয় <strong>${order.name}</strong>,
-              </p>
-              
-              <p style="color: #555; font-size: 15px; line-height: 1.8;">
-                আপনার <strong>System Toolkit</strong> অর্ডার সফলভাবে গৃহীত হয়েছে। পেমেন্ট সম্পন্ন করার পর ১ ঘন্টার মধ্যে আপনি সফটওয়্যার অ্যাক্সেস পাবেন।
-              </p>
-              
-              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 20px; margin: 25px 0; color: white;">
-                <h3 style="margin: 0 0 15px 0; font-size: 18px;">📦 অর্ডার বিবরণ</h3>
-                <table style="width: 100%; border-collapse: collapse;">
-                  <tr>
-                    <td style="padding: 8px 0; opacity: 0.9;">অর্ডার আইডি:</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: bold;">#${order.id.slice(-8).toUpperCase()}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; opacity: 0.9;">প্ল্যান:</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: bold;">${PLAN_NAMES[order.plan] || order.plan}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; opacity: 0.9;">মূল্য:</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: bold; font-size: 20px;">৳${order.amount}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; opacity: 0.9;">মোবাইল:</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: bold;">${order.mobile}</td>
-                  </tr>
-                  <tr>
-                    <td style="padding: 8px 0; opacity: 0.9;">ইমেইল:</td>
-                    <td style="padding: 8px 0; text-align: right; font-weight: bold;">${order.email}</td>
-                  </tr>
-                </table>
+              <div class="order-row">
+                <span>প্ল্যান:</span>
+                <strong>${PLAN_NAMES[order.plan] || order.plan}</strong>
               </div>
-              
-              <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 0 12px 12px 0; margin: 20px 0;">
-                <p style="margin: 0; color: #856404; font-size: 14px;">
-                  <strong>📱 পেমেন্ট পদ্ধতি:</strong><br>
-                  বিকাশ/নগদ: <strong>+880 1711-731354</strong><br>
-                  পেমেন্ট করুন এবং স্ক্রিনশট WhatsApp এ পাঠান।
-                </p>
+              <div class="order-row">
+                <span>মূল্য:</span>
+                <strong style="font-size: 20px; color: #667eea;">৳${order.amount}</strong>
               </div>
-              
-              <div style="text-align: center; margin-top: 30px;">
-                <a href="https://wa.me/8801711731354?text=${encodeURIComponent('হ্যালো, আমি অর্ডার কনফার্ম করতে চাই। অর্ডার আইডি: #' + order.id.slice(-8).toUpperCase())}" 
-                   style="display: inline-block; background: #25D366; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; font-size: 16px;">
-                  💬 WhatsApp এ যোগাযোগ করুন
-                </a>
+              <div class="order-row">
+                <span>মোবাইল:</span>
+                <strong>${order.mobile}</strong>
               </div>
-              
-              <div style="border-top: 1px solid #eee; margin-top: 30px; padding-top: 20px; text-align: center;">
-                <p style="color: #888; font-size: 13px; margin: 0;">
-                  © 2025 NextGen Digital Studio | <a href="https://www.facebook.com/nextgendigitalstudio" style="color: #667eea;">Facebook</a>
-                </p>
+              <div class="order-row">
+                <span>ইমেইল:</span>
+                <strong>${order.email}</strong>
               </div>
             </div>
+            
+            <div class="payment-box">
+              <p style="margin: 0; color: #856404;">
+                <strong>📱 পেমেন্ট পদ্ধতি:</strong><br>
+                বিকাশ/নগদ: <strong>+880 1711-731354</strong><br>
+                পেমেন্ট করুন এবং স্ক্রিনশট WhatsApp এ পাঠান।
+              </p>
+            </div>
+            
+            <div style="text-align: center;">
+              <a href="https://wa.me/8801711731354?text=${encodeURIComponent('হ্যালো, আমি অর্ডার কনফার্ম করতে চাই। অর্ডার আইডি: #' + order.id.slice(-8).toUpperCase())}" 
+                 class="whatsapp-btn">
+                💬 WhatsApp এ যোগাযোগ করুন
+              </a>
+            </div>
           </div>
-        `
-      })
+          
+          <div class="footer">
+            <p>© 2025 NextGen Digital Studio | <a href="https://www.facebook.com/nextgendigitalstudio" style="color: #667eea;">Facebook</a></p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const transporter = createTransporter();
+    
+    const info = await transporter.sendMail({
+      from: `"System Toolkit" <${EMAIL_FROM}>`,
+      to: order.email,
+      subject: '🎉 অর্ডার সফল - System Toolkit',
+      html: emailHtml
     });
 
-    if (response.ok) {
-      const result = await response.json();
-      console.log('✅ Welcome email sent! ID:', result.id);
-      return true;
-    } else {
-      const errorText = await response.text();
-      console.error('⚠️ Email failed:', errorText);
-      return false;
-    }
+    console.log('✅ Welcome email sent! Message ID:', info.messageId);
+    return true;
   } catch (error) {
     console.error('⚠️ Email error:', error);
     return false;
@@ -235,7 +241,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Send to Google Sheets (primary storage for production)
-    await sendToGoogleSheets({
+    const sheetsSync = await sendToGoogleSheets({
       id: orderId,
       name,
       mobile,
@@ -245,7 +251,7 @@ export async function POST(request: NextRequest) {
       createdAt: orderDate
     });
 
-    // Send welcome email
+    // Send welcome email via Brevo SMTP
     let emailSent = false;
     if (email) {
       emailSent = await sendWelcomeEmail({
@@ -263,7 +269,7 @@ export async function POST(request: NextRequest) {
       orderId: orderId,
       message: 'Order created successfully',
       emailSent,
-      googleSheetsSync: !!GOOGLE_SHEETS_WEBHOOK_URL,
+      googleSheetsSync: sheetsSync,
       dbSaved
     });
 
