@@ -208,8 +208,9 @@ async function sendWelcomeEmail(order: {
       return true;
     } else {
       const errorText = await response.text();
-      console.error('⚠️ Email failed:', errorText);
-      return false;
+      console.error('⚠️ Email failed:', response.status, errorText);
+      // Return error details for debugging
+      return { success: false, status: response.status, error: errorText } as any;
     }
   } catch (error) {
     console.error('⚠️ Email error:', error);
@@ -368,7 +369,8 @@ export async function POST(request: NextRequest) {
     });
 
     // Send welcome email to customer
-    let emailSent = false;
+    let emailSent: any = false;
+    let emailError = null;
     if (email) {
       emailSent = await sendWelcomeEmail({
         id: orderId,
@@ -378,6 +380,10 @@ export async function POST(request: NextRequest) {
         plan,
         amount
       });
+      if (typeof emailSent === 'object' && emailSent.success === false) {
+        emailError = emailSent;
+        emailSent = false;
+      }
     }
 
     // Send admin notification
@@ -395,6 +401,7 @@ export async function POST(request: NextRequest) {
       orderId: orderId,
       message: 'Order created successfully',
       emailSent,
+      emailError,
       googleSheetsSync: sheetsSync,
       dbSaved,
       debug: {
