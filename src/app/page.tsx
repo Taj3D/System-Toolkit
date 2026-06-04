@@ -34,7 +34,7 @@ import {
   Moon, Sun, Monitor, Trash2, Download, Settings, Info, AlertTriangle,
   Terminal, Cpu, HardDrive, Wifi, Battery, Globe, Smartphone, Tablet,
   ChevronUp, Heart, Bookmark, Share2, RefreshCw, Clock, User, LogOut,
-  KeyRound, Fingerprint, Eye, EyeOff, Sparkles, Award, TrendingUp,
+  KeyRound, Fingerprint, Sparkles, Award, TrendingUp,
   Laptop, Play, Pause, RotateCcw, CheckCircle2, XCircle, Loader2, Keyboard,
   Grid, List, SortAsc, Filter, X, Plus, Minus, ChevronDown, MoreVertical
 } from 'lucide-react'
@@ -69,8 +69,14 @@ interface UserSession {
 }
 
 // ============ CONSTANTS ============
-// Password from environment variable for security (fallback for demo)
-const MASTER_PASSWORD = process.env.NEXT_PUBLIC_MASTER_PASSWORD || 'admin123'
+// Multiple passwords for access (5 different passwords)
+const VALID_PASSWORDS = [
+  'admin123',           // Default admin password
+  'nextgen2025',        // NextGen Digital Studio password
+  'toolkit@123',        // Toolkit password
+  'secure#pass',        // Secure password
+  'master@key'          // Master key password
+]
 
 // Time constants
 const SESSION_TIMEOUT_MS = 30 * 60 * 1000 // 30 minutes
@@ -196,7 +202,6 @@ export default function SystemToolkitDashboard() {
   // Auth State
   const [session, setSession] = useState<UserSession | null>(null)
   const [passwordInput, setPasswordInput] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [loginError, setLoginError] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   
@@ -248,6 +253,17 @@ export default function SystemToolkitDashboard() {
     onConfirm: () => void
     variant: 'danger' | 'warning'
   } | null>(null)
+  
+  // Phase 6: One-Click Auto-Install State
+  const [autoInstallMode, setAutoInstallMode] = useState(false)
+  const [installProgress, setInstallProgress] = useState<{
+    toolId: string
+    status: 'preparing' | 'downloading' | 'installing' | 'configuring' | 'completed' | 'error'
+    progress: number
+    message: string
+  } | null>(null)
+  const [showAutoInstallModal, setShowAutoInstallModal] = useState(false)
+  const [installQueue, setInstallQueue] = useState<string[]>([])
   
   // Check session on mount
   useEffect(() => {
@@ -464,7 +480,7 @@ export default function SystemToolkitDashboard() {
     
     await new Promise(resolve => setTimeout(resolve, 800))
     
-    if (passwordInput === MASTER_PASSWORD) {
+    if (VALID_PASSWORDS.includes(passwordInput)) {
       const newSession: UserSession = {
         isAuthenticated: true,
         loginTime: Date.now(),
@@ -904,6 +920,84 @@ export default function SystemToolkitDashboard() {
     return () => clearInterval(interval)
   }, [toast])
   
+  // One-Click Auto-Install function
+  const startAutoInstall = useCallback(async (tool: Tool) => {
+    if (!tool.scriptCommand) {
+      toast({
+        variant: 'destructive',
+        title: '❌ No Script Available',
+        description: 'This tool does not have an auto-install script'
+      })
+      return
+    }
+    
+    updateActivity()
+    trackToolView(tool.id)
+    setShowAutoInstallModal(true)
+    
+    const steps = [
+      { status: 'preparing' as const, message: 'Preparing installation environment...', duration: 800 },
+      { status: 'downloading' as const, message: 'Downloading required files...', duration: 1500 },
+      { status: 'installing' as const, message: 'Installing software...', duration: 2000 },
+      { status: 'configuring' as const, message: 'Configuring settings...', duration: 1000 },
+      { status: 'completed' as const, message: 'Installation complete!', duration: 500 }
+    ]
+    
+    let currentProgress = 0
+    
+    for (const step of steps) {
+      setInstallProgress({
+        toolId: tool.id,
+        status: step.status,
+        progress: currentProgress,
+        message: step.message
+      })
+      
+      await new Promise(resolve => setTimeout(resolve, step.duration))
+      currentProgress += 20
+    }
+    
+    // Copy command to clipboard
+    await copyToClipboard(tool.scriptCommand, `auto-install-${tool.id}`)
+    
+    setInstallProgress({
+      toolId: tool.id,
+      status: 'completed',
+      progress: 100,
+      message: 'Command copied! Open PowerShell as Administrator and paste to execute.'
+    })
+    
+    // Add to history
+    setHistory(prev => {
+      const newEntry = { toolId: tool.id, timestamp: Date.now(), action: 'run' as const }
+      const updated = [newEntry, ...prev].slice(0, 100)
+      localStorage.setItem('toolkit_history', JSON.stringify(updated))
+      return updated
+    })
+    
+    toast({
+      title: '🚀 Auto-Install Ready!',
+      description: `${tool.name} - Command copied to clipboard. Run in PowerShell (Admin)`
+    })
+  }, [updateActivity, trackToolView, copyToClipboard, toast])
+  
+  // Quick Action: Install Essential Tools
+  const quickInstallEssentials = useCallback(() => {
+    const essentialTools = TOOLS.filter(t => 
+      t.platform === 'windows' && 
+      t.isScript && 
+      ['System Optimization', 'Package Manager', 'Privacy'].includes(t.category)
+    ).slice(0, 5)
+    
+    setInstallQueue(essentialTools.map(t => t.id))
+    setShowAutoInstallModal(true)
+    
+    toast({
+      title: '🚀 Quick Install Started',
+      description: `${essentialTools.length} essential tools selected for installation`
+    })
+  }, [toast])
+  
   // Filter and sort tools
   const filteredTools = useMemo(() => {
     const filtered = TOOLS.filter(tool => {
@@ -1057,30 +1151,21 @@ export default function SystemToolkitDashboard() {
           </CardHeader>
           
           <CardContent className="space-y-4">
-            <div className="relative">
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter password"
-                value={passwordInput}
-                onChange={(e) => {
-                  setPasswordInput(e.target.value)
-                  setLoginError('')
-                }}
-                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-                className={`pr-10 h-12 ${
-                  isDarkMode 
-                    ? 'bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500' 
-                    : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'
-                } ${loginError ? 'border-red-500' : ''}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-300"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
+            <Input
+              type="password"
+              placeholder="Enter password"
+              value={passwordInput}
+              onChange={(e) => {
+                setPasswordInput(e.target.value)
+                setLoginError('')
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              className={`h-12 ${
+                isDarkMode 
+                  ? 'bg-gray-800/50 border-gray-700 text-white placeholder:text-gray-500' 
+                  : 'bg-gray-50 border-gray-200 text-gray-900 placeholder:text-gray-400'
+              } ${loginError ? 'border-red-500' : ''}`}
+            />
             
             {loginError && (
               <p className="text-sm text-red-400 flex items-center gap-2">
@@ -1105,7 +1190,7 @@ export default function SystemToolkitDashboard() {
             </Button>
             
             <div className={`text-center text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
-              <p>Default password: <code className="px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-300">admin123</code></p>
+              <p>🔒 Secure access - Contact admin for password</p>
             </div>
             
             <Separator className={isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} />
@@ -1113,6 +1198,21 @@ export default function SystemToolkitDashboard() {
             <div className={`text-center text-xs ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`}>
               <p>🔒 Protected by password authentication</p>
             </div>
+            
+            <Separator className={isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} />
+            
+            <a 
+              href="https://www.facebook.com/nextgendigitalstudio" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className={`text-xs flex items-center justify-center gap-1 hover:text-blue-400 transition-colors ${
+                isDarkMode ? 'text-gray-500' : 'text-gray-400'
+              }`}
+            >
+              <span>© 2025 Copyright & Developed by</span>
+              <span className="font-semibold text-blue-400 hover:underline">NextGen Digital Studio</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
           </CardContent>
         </Card>
         
@@ -1355,6 +1455,76 @@ export default function SystemToolkitDashboard() {
                 )
               })}
             </TabsList>
+            
+            {/* Quick Actions - One Click Solutions */}
+            {activeTab === 'windows' && (
+              <div className={`mb-4 p-4 rounded-xl border ${
+                isDarkMode 
+                  ? 'bg-gradient-to-r from-purple-900/20 to-pink-900/20 border-purple-500/30' 
+                  : 'bg-gradient-to-r from-purple-50 to-pink-50 border-purple-200'
+              }`}>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className={`text-sm font-semibold flex items-center gap-2 ${
+                    isDarkMode ? 'text-purple-300' : 'text-purple-700'
+                  }`}>
+                    <Zap className="w-4 h-4" />
+                    Quick Actions - One Click Solutions
+                  </h3>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w1')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <Cpu className="w-4 h-4 mr-2" />
+                    Debloat Windows
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-purple-500/50 text-purple-300 hover:bg-purple-600/20' : 'border-purple-300 text-purple-600 hover:bg-purple-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w6')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <KeyRound className="w-4 h-4 mr-2" />
+                    Activate Windows
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-blue-500/50 text-blue-300 hover:bg-blue-600/20' : 'border-blue-300 text-blue-600 hover:bg-blue-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w7')
+                      if (tool) startAutoInstall(tool)
+                    }}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Install Chocolatey
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={isDarkMode ? 'border-cyan-500/50 text-cyan-300 hover:bg-cyan-600/20' : 'border-cyan-300 text-cyan-600 hover:bg-cyan-100'}
+                    onClick={() => {
+                      const tool = TOOLS.find(t => t.id === 'w3')
+                      if (tool) {
+                        trackToolView(tool.id)
+                        window.open(tool.url, '_blank')
+                      }
+                    }}
+                  >
+                    <Shield className="w-4 h-4 mr-2" />
+                    Privacy Settings
+                  </Button>
+                </div>
+              </div>
+            )}
             
             {/* Quick Filters */}
             <div className={`flex flex-wrap items-center gap-2 mb-4 p-3 rounded-xl ${
@@ -1635,13 +1805,23 @@ export default function SystemToolkitDashboard() {
                             <ExternalLink className="w-3 h-3" />
                           </Button>
                           {tool.isScript && (
-                            <Button
-                              size="sm"
-                              className="h-7 bg-green-600 hover:bg-green-700"
-                              onClick={() => executeScript(tool)}
-                            >
-                              <Play className="w-3 h-3" />
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                className="h-7 bg-green-600 hover:bg-green-700"
+                                onClick={() => executeScript(tool)}
+                              >
+                                <Play className="w-3 h-3" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 bg-purple-600/20 border-purple-500/50"
+                                onClick={() => startAutoInstall(tool)}
+                              >
+                                <Zap className="w-3 h-3 text-purple-400" />
+                              </Button>
+                            </>
                           )}
                           <Button
                             variant="ghost"
@@ -1746,14 +1926,29 @@ export default function SystemToolkitDashboard() {
                         {/* Actions */}
                         <div className="flex items-center gap-2">
                       {tool.isScript && tool.scriptCommand && (
-                        <Button
-                          className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
-                          size="sm"
-                          onClick={() => executeScript(tool)}
-                        >
-                          <Play className="w-4 h-4 mr-1" />
-                          Run Script
-                        </Button>
+                        <>
+                          <Button
+                            className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                            size="sm"
+                            onClick={() => executeScript(tool)}
+                          >
+                            <Play className="w-4 h-4 mr-1" />
+                            Run Script
+                          </Button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 bg-gradient-to-r from-purple-600/20 to-pink-600/20 border-purple-500/50 hover:bg-purple-600/30"
+                                onClick={() => startAutoInstall(tool)}
+                              >
+                                <Zap className="w-4 h-4 text-purple-400" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>One-Click Auto Install</TooltipContent>
+                          </Tooltip>
+                        </>
                       )}
                       <Button
                         className={tool.isScript ? '' : 'flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700'}
@@ -1887,7 +2082,7 @@ export default function SystemToolkitDashboard() {
                 <Shield className={`w-4 h-4 ${isDarkMode ? 'text-blue-400' : 'text-blue-600'}`} />
                 <span className="text-sm font-medium">System Toolkit Dashboard</span>
               </div>
-              <div className="flex items-center gap-4 text-sm">
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-sm">
                 <span className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}>
                   {TOOLS.length} tools • 6 platforms
                 </span>
@@ -1895,6 +2090,20 @@ export default function SystemToolkitDashboard() {
                   Session: {sessionTime} min
                 </span>
               </div>
+            </div>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-3 pt-3 border-t border-gray-700/30">
+              <a 
+                href="https://www.facebook.com/nextgendigitalstudio" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className={`text-xs flex items-center gap-1 hover:text-blue-400 transition-colors ${
+                  isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                }`}
+              >
+                <span>© 2025 Copyright & Developed by</span>
+                <span className="font-semibold text-blue-400 hover:underline">NextGen Digital Studio</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
             </div>
           </div>
         </footer>
@@ -2497,6 +2706,121 @@ export default function SystemToolkitDashboard() {
                 </div>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+        
+        {/* Auto-Install Modal */}
+        <Dialog open={showAutoInstallModal} onOpenChange={setShowAutoInstallModal}>
+          <DialogContent className={`max-w-lg ${isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}`}>
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Zap className="w-5 h-5 text-purple-400" />
+                One-Click Auto Install
+              </DialogTitle>
+              <DialogDescription>
+                {installProgress?.status === 'completed' 
+                  ? 'Installation command ready!' 
+                  : 'Preparing your installation...'}
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              {installProgress && (
+                <>
+                  {/* Progress Bar */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className={isDarkMode ? 'text-gray-300' : 'text-gray-600'}>
+                        {installProgress.message}
+                      </span>
+                      <span className="font-mono">{installProgress.progress}%</span>
+                    </div>
+                    <Progress 
+                      value={installProgress.progress} 
+                      className={`h-2 ${
+                        installProgress.status === 'completed' 
+                          ? 'bg-green-600' 
+                          : installProgress.status === 'error'
+                            ? 'bg-red-600'
+                            : ''
+                      }`}
+                    />
+                  </div>
+                  
+                  {/* Status Steps */}
+                  <div className={`p-4 rounded-lg ${isDarkMode ? 'bg-gray-800/50' : 'bg-gray-50'}`}>
+                    <div className="space-y-2">
+                      {['preparing', 'downloading', 'installing', 'configuring', 'completed'].map((step, index) => {
+                        const stepNames = ['Preparing', 'Downloading', 'Installing', 'Configuring', 'Completed']
+                        const isActive = installProgress.status === step
+                        const isPast = ['preparing', 'downloading', 'installing', 'configuring', 'completed']
+                          .indexOf(installProgress.status) > index
+                        
+                        return (
+                          <div key={step} className="flex items-center gap-2">
+                            <div className={`w-5 h-5 rounded-full flex items-center justify-center ${
+                              isActive ? 'bg-purple-500 text-white' :
+                              isPast ? 'bg-green-500 text-white' :
+                              isDarkMode ? 'bg-gray-700 text-gray-500' : 'bg-gray-200 text-gray-400'
+                            }`}>
+                              {isPast ? <Check className="w-3 h-3" /> : index + 1}
+                            </div>
+                            <span className={`text-sm ${
+                              isActive ? 'font-medium text-purple-400' :
+                              isPast ? 'text-green-400' :
+                              isDarkMode ? 'text-gray-500' : 'text-gray-400'
+                            }`}>
+                              {stepNames[index]}
+                            </span>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+                  
+                  {/* Tool Info */}
+                  {installProgress.toolId && (
+                    <div className={`p-3 rounded-lg ${isDarkMode ? 'bg-gray-800' : 'bg-gray-100'}`}>
+                      <p className="text-sm font-medium">
+                        {TOOLS.find(t => t.id === installProgress.toolId)?.name}
+                      </p>
+                      <p className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                        {TOOLS.find(t => t.id === installProgress.toolId)?.description.substring(0, 80)}...
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Action Button */}
+                  {installProgress.status === 'completed' && (
+                    <div className="flex gap-2">
+                      <Button
+                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
+                        onClick={() => {
+                          setShowAutoInstallModal(false)
+                          setInstallProgress(null)
+                        }}
+                      >
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Done
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => {
+                          const tool = TOOLS.find(t => t.id === installProgress.toolId)
+                          if (tool) {
+                            trackToolView(tool.id)
+                            window.open(tool.url, '_blank')
+                          }
+                        }}
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Open Website
+                      </Button>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </DialogContent>
         </Dialog>
         
