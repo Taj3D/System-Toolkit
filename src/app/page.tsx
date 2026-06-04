@@ -8,6 +8,24 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
@@ -221,6 +239,15 @@ export default function SystemToolkitDashboard() {
   const [showHistoryModal, setShowHistoryModal] = useState(false)
   const [showAddToCollectionMenu, setShowAddToCollectionMenu] = useState<string | null>(null)
   const [batchScriptProgress, setBatchScriptProgress] = useState<Record<string, number>>({})
+  
+  // Phase 5: Confirmation Dialog State
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean
+    title: string
+    description: string
+    onConfirm: () => void
+    variant: 'danger' | 'warning'
+  } | null>(null)
   
   // Check session on mount
   useEffect(() => {
@@ -719,6 +746,67 @@ export default function SystemToolkitDashboard() {
     })
   }, [toast])
   
+  // Phase 5: Show confirmation dialog for destructive actions
+  const showConfirmation = useCallback((
+    title: string,
+    description: string,
+    onConfirm: () => void,
+    variant: 'danger' | 'warning' = 'danger'
+  ) => {
+    setConfirmDialog({
+      isOpen: true,
+      title,
+      description,
+      onConfirm,
+      variant
+    })
+  }, [])
+  
+  const closeConfirmation = useCallback(() => {
+    setConfirmDialog(null)
+  }, [])
+  
+  // Clear favorites with confirmation
+  const clearFavoritesWithConfirm = useCallback(() => {
+    showConfirmation(
+      'Clear All Favorites?',
+      `This will remove all ${favorites.length} favorites. This action cannot be undone.`,
+      () => {
+        setFavorites([])
+        localStorage.removeItem('toolkit_favorites')
+        toast({
+          title: '💔 Favorites Cleared',
+          description: 'All favorites have been removed'
+        })
+      },
+      'warning'
+    )
+  }, [favorites.length, showConfirmation, toast])
+  
+  // Delete collection with confirmation
+  const deleteCollectionWithConfirm = useCallback((collectionId: string, collectionName: string) => {
+    showConfirmation(
+      'Delete Collection?',
+      `This will permanently delete "${collectionName}". This action cannot be undone.`,
+      () => {
+        deleteCollection(collectionId)
+      },
+      'danger'
+    )
+  }, [showConfirmation, deleteCollection])
+  
+  // Clear history with confirmation
+  const clearHistoryWithConfirm = useCallback(() => {
+    showConfirmation(
+      'Clear All History?',
+      `This will remove all ${history.length} history entries. This action cannot be undone.`,
+      () => {
+        clearHistory()
+      },
+      'warning'
+    )
+  }, [history.length, showConfirmation, clearHistory])
+  
   // Copy to clipboard with fallback for older browsers
   const copyToClipboard = useCallback(async (text: string, id: string) => {
     try {
@@ -1116,6 +1204,7 @@ export default function SystemToolkitDashboard() {
                       size="icon"
                       onClick={toggleTheme}
                       className={isDarkMode ? 'text-yellow-400' : 'text-gray-600'}
+                      aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                     >
                       {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                     </Button>
@@ -1128,13 +1217,19 @@ export default function SystemToolkitDashboard() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      onClick={() => setFavorites([])}
+                      onClick={favorites.length > 0 ? clearFavoritesWithConfirm : () => setQuickFilter('favorites')}
                       className={isDarkMode ? 'text-red-400' : 'text-red-500'}
+                      aria-label={`${favorites.length} Favorites`}
                     >
                       <Heart className="w-5 h-5" />
+                      {favorites.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                          {favorites.length}
+                        </span>
+                      )}
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>{favorites.length} Favorites</TooltipContent>
+                  <TooltipContent>{favorites.length} Favorites{favorites.length > 0 ? ' (Click to clear)' : ''}</TooltipContent>
                 </Tooltip>
                 
                 <Tooltip>
@@ -1144,6 +1239,7 @@ export default function SystemToolkitDashboard() {
                       size="icon"
                       onClick={() => setShowCollectionsModal(true)}
                       className={isDarkMode ? 'text-purple-400' : 'text-purple-500'}
+                      aria-label={`${collections.length} Collections`}
                     >
                       <Bookmark className="w-5 h-5" />
                     </Button>
@@ -1158,6 +1254,7 @@ export default function SystemToolkitDashboard() {
                       size="icon"
                       onClick={() => setShowStatsModal(true)}
                       className={isDarkMode ? 'text-cyan-400' : 'text-cyan-500'}
+                      aria-label="View usage statistics"
                     >
                       <TrendingUp className="w-5 h-5" />
                     </Button>
@@ -1172,6 +1269,7 @@ export default function SystemToolkitDashboard() {
                       size="icon"
                       onClick={() => setShowHistoryModal(true)}
                       className={isDarkMode ? 'text-amber-400' : 'text-amber-500'}
+                      aria-label={`View history (${history.length} items)`}
                     >
                       <Clock className="w-5 h-5" />
                     </Button>
@@ -1214,6 +1312,7 @@ export default function SystemToolkitDashboard() {
                       size="icon"
                       onClick={handleLogout}
                       className={isDarkMode ? 'text-gray-400' : 'text-gray-500'}
+                      aria-label="Logout"
                     >
                       <LogOut className="w-5 h-5" />
                     </Button>
@@ -1401,18 +1500,28 @@ export default function SystemToolkitDashboard() {
             {/* Tools Grid/List */}
             <div className={viewMode === 'grid' 
               ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4' 
-              : 'flex flex-col gap-3'
+              : 'flex flex-col gap-2'
             }>
               {filteredTools.map(tool => (
                 <Card
                   key={tool.id}
-                  className={`relative overflow-hidden transition-all hover:scale-[1.02] hover:shadow-xl ${
+                  role="article"
+                  aria-label={tool.name}
+                  className={`relative overflow-hidden transition-all ${
+                    viewMode === 'list' 
+                      ? 'flex flex-row items-center gap-4 p-4 hover:shadow-md border-l-4 ' + 
+                        (tool.isFeatured 
+                          ? 'border-l-blue-500' 
+                          : tool.isScript 
+                            ? 'border-l-green-500' 
+                            : isDarkMode ? 'border-l-gray-600' : 'border-l-gray-300'
+                        )
+                      : 'hover:scale-[1.02] hover:shadow-xl'
+                  } ${
                     isDarkMode 
                       ? 'bg-gray-800/50 border-gray-700/50 hover:border-blue-500/50' 
                       : 'bg-white border-gray-200 hover:border-blue-400'
-                  } ${tool.isFeatured ? 'ring-2 ring-blue-500/50' : ''} ${
-                    viewMode === 'list' ? 'flex flex-row items-center p-4' : ''
-                  }`}
+                  } ${tool.isFeatured && viewMode === 'grid' ? 'ring-2 ring-blue-500/50' : ''}`}
                 >
                   {/* Featured badge */}
                   {tool.isFeatured && (
@@ -1454,81 +1563,188 @@ export default function SystemToolkitDashboard() {
                     </div>
                   )}
                   
-                  <CardHeader className="pb-2">
+                  <CardHeader className={viewMode === 'list' ? 'p-0 flex-shrink-0 w-48' : 'pb-2'}>
                     <div className="flex items-start justify-between gap-2">
-                      <CardTitle className="text-base font-bold">{tool.name}</CardTitle>
+                      <CardTitle className={`font-bold ${viewMode === 'list' ? 'text-sm' : 'text-base'}`}>
+                        {viewMode === 'list' ? (
+                          <div className="flex items-center gap-2">
+                            {tool.name}
+                            {tool.isFeatured && (
+                              <Sparkles className="w-3 h-3 text-blue-400" />
+                            )}
+                            {tool.isNew && (
+                              <Badge variant="secondary" className="bg-green-500/20 text-green-400 text-[10px] px-1">New</Badge>
+                            )}
+                          </div>
+                        ) : (
+                          tool.name
+                        )}
+                      </CardTitle>
                     </div>
-                    <CardDescription className="text-sm line-clamp-2">
-                      {tool.description}
-                    </CardDescription>
+                    {viewMode !== 'list' && (
+                      <CardDescription className="text-sm line-clamp-2">
+                        {tool.description}
+                      </CardDescription>
+                    )}
                   </CardHeader>
                   
-                  <CardContent className="space-y-3">
-                    {/* Rating & Downloads */}
-                    <div className="flex items-center justify-between">
-                      {renderStars(tool.rating)}
-                      <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        {tool.downloads} downloads
-                      </span>
-                    </div>
-                    
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-1">
-                      {tool.tags.slice(0, 3).map(tag => (
-                        <Badge
-                          key={tag}
-                          variant="outline"
-                          className="text-xs px-1.5 py-0"
-                        >
-                          {tag}
-                        </Badge>
-                      ))}
-                    </div>
-                    
-                    {/* Risk Level */}
-                    <div className="flex items-center gap-2">
-                      <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Risk Level:
-                      </span>
-                      <Badge className={getRiskColor(tool.risk)}>
-                        {tool.risk}
-                      </Badge>
-                    </div>
-                    
-                    {/* Script Command */}
-                    {tool.isScript && tool.scriptCommand && (
-                      <div className={`p-2 rounded-lg font-mono text-xs ${
-                        isDarkMode ? 'bg-gray-900/50' : 'bg-gray-100'
-                      }`}>
-                        <div className="flex items-center justify-between gap-2">
-                          <code className="text-blue-400 truncate flex-1">
-                            {tool.scriptCommand}
-                          </code>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-6 w-6"
-                                onClick={() => copyToClipboard(tool.scriptCommand!, tool.id)}
-                              >
-                                {copiedId === tool.id ? (
-                                  <Check className="w-3 h-3 text-green-400" />
-                                ) : (
-                                  <Copy className="w-3 h-3" />
-                                )}
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent>Copy Command</TooltipContent>
-                          </Tooltip>
+                  <CardContent className={viewMode === 'list' ? 'p-0 flex-1 flex items-center gap-4' : 'space-y-3'}>
+                    {viewMode === 'list' ? (
+                      <>
+                        {/* List View: Compact inline layout */}
+                        <div className="flex-1 flex items-center gap-4">
+                          {/* Category & Description */}
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-xs truncate ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                              {tool.category} • {tool.description.substring(0, 60)}...
+                            </p>
+                          </div>
+                          
+                          {/* Tags */}
+                          <div className="hidden md:flex flex-wrap gap-1 max-w-32">
+                            {tool.tags.slice(0, 2).map(tag => (
+                              <Badge key={tag} variant="outline" className="text-xs px-1.5 py-0">
+                                {tag}
+                              </Badge>
+                            ))}
+                          </div>
+                          
+                          {/* Rating & Risk */}
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              <Star className="w-3 h-3 text-yellow-400 fill-yellow-400" />
+                              <span className="text-xs">{tool.rating}</span>
+                            </div>
+                            <Badge className={getRiskColor(tool.risk) + ' text-xs'}>
+                              {tool.risk}
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
-                    )}
-                    
-                    <Separator className={isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} />
-                    
-                    {/* Actions */}
-                    <div className="flex items-center gap-2">
+                        
+                        {/* Actions for list view */}
+                        <div className="flex items-center gap-1">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              trackToolView(tool.id)
+                              window.open(tool.url, '_blank')
+                            }}
+                            className="h-7"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                          </Button>
+                          {tool.isScript && (
+                            <Button
+                              size="sm"
+                              className="h-7 bg-green-600 hover:bg-green-700"
+                              onClick={() => executeScript(tool)}
+                            >
+                              <Play className="w-3 h-3" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => toggleFavorite(tool.id)}
+                          >
+                            <Heart className={`w-3 h-3 ${favorites.includes(tool.id) ? 'fill-red-500 text-red-500' : ''}`} />
+                          </Button>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-7 w-7">
+                                <Bookmark className="w-3 h-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className={isDarkMode ? 'bg-gray-800 border-gray-700' : ''}>
+                              <DropdownMenuLabel className="text-xs">Add to Collection</DropdownMenuLabel>
+                              <DropdownMenuSeparator className={isDarkMode ? 'bg-gray-700' : ''} />
+                              {collections.length === 0 ? (
+                                <DropdownMenuItem disabled className="text-xs">No collections</DropdownMenuItem>
+                              ) : (
+                                collections.map(collection => (
+                                  <DropdownMenuItem
+                                    key={collection.id}
+                                    onClick={() => addToCollection(collection.id, tool.id)}
+                                    className={isDarkMode ? 'text-gray-300 focus:bg-gray-700' : ''}
+                                  >
+                                    <span className="text-xs">{collection.name}</span>
+                                  </DropdownMenuItem>
+                                ))
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* Grid View: Original layout */}
+                        {/* Rating & Downloads */}
+                        <div className="flex items-center justify-between">
+                          {renderStars(tool.rating)}
+                          <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            {tool.downloads} downloads
+                          </span>
+                        </div>
+                        
+                        {/* Tags */}
+                        <div className="flex flex-wrap gap-1">
+                          {tool.tags.slice(0, 3).map(tag => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-xs px-1.5 py-0"
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                        </div>
+                        
+                        {/* Risk Level */}
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            Risk Level:
+                          </span>
+                          <Badge className={getRiskColor(tool.risk)}>
+                            {tool.risk}
+                          </Badge>
+                        </div>
+                        
+                        {/* Script Command */}
+                        {tool.isScript && tool.scriptCommand && (
+                          <div className={`p-2 rounded-lg font-mono text-xs ${
+                            isDarkMode ? 'bg-gray-900/50' : 'bg-gray-100'
+                          }`}>
+                            <div className="flex items-center justify-between gap-2">
+                              <code className="text-blue-400 truncate flex-1">
+                                {tool.scriptCommand}
+                              </code>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6"
+                                    onClick={() => copyToClipboard(tool.scriptCommand!, tool.id)}
+                                  >
+                                    {copiedId === tool.id ? (
+                                      <Check className="w-3 h-3 text-green-400" />
+                                    ) : (
+                                      <Copy className="w-3 h-3" />
+                                    )}
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>Copy Command</TooltipContent>
+                              </Tooltip>
+                            </div>
+                          </div>
+                        )}
+                        
+                        <Separator className={isDarkMode ? 'bg-gray-700' : 'bg-gray-200'} />
+                        
+                        {/* Actions */}
+                        <div className="flex items-center gap-2">
                       {tool.isScript && tool.scriptCommand && (
                         <Button
                           className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
@@ -1591,7 +1807,54 @@ export default function SystemToolkitDashboard() {
                         </TooltipTrigger>
                         <TooltipContent>Copy URL</TooltipContent>
                       </Tooltip>
-                    </div>
+                      
+                      {/* Add to Collection Dropdown */}
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="icon" className="h-8 w-8">
+                            <Bookmark className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className={isDarkMode ? 'bg-gray-800 border-gray-700' : ''}>
+                          <DropdownMenuLabel>Add to Collection</DropdownMenuLabel>
+                          <DropdownMenuSeparator className={isDarkMode ? 'bg-gray-700' : ''} />
+                          {collections.length === 0 ? (
+                            <DropdownMenuItem disabled className={isDarkMode ? 'text-gray-500' : 'text-gray-400'}>
+                              No collections yet
+                            </DropdownMenuItem>
+                          ) : (
+                            collections.map(collection => (
+                              <DropdownMenuItem
+                                key={collection.id}
+                                onClick={() => addToCollection(collection.id, tool.id)}
+                                className={isDarkMode ? 'text-gray-300 focus:bg-gray-700' : ''}
+                              >
+                                <div className="flex items-center gap-2">
+                                  <div className={`w-2 h-2 rounded-full bg-${collection.color}-500`} />
+                                  {collection.name}
+                                  {collection.toolIds.includes(tool.id) && (
+                                    <Check className="w-3 h-3 ml-auto text-green-400" />
+                                  )}
+                                </div>
+                              </DropdownMenuItem>
+                            ))
+                          )}
+                          <DropdownMenuSeparator className={isDarkMode ? 'bg-gray-700' : ''} />
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setNewCollectionName('')
+                              setShowCollectionsModal(true)
+                            }}
+                            className={isDarkMode ? 'text-purple-400 focus:bg-gray-700' : 'text-purple-600'}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Create New Collection
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
                 </Card>
               ))}
@@ -1891,7 +2154,8 @@ export default function SystemToolkitDashboard() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-red-400 hover:text-red-300"
-                              onClick={() => deleteCollection(collection.id)}
+                              onClick={() => deleteCollectionWithConfirm(collection.id, collection.name)}
+                              aria-label={`Delete ${collection.name} collection`}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -2226,7 +2490,7 @@ export default function SystemToolkitDashboard() {
                 )}
                 
                 <div className="flex justify-end">
-                  <Button variant="outline" onClick={clearHistory} className="text-red-400 hover:text-red-300">
+                  <Button variant="outline" onClick={clearHistoryWithConfirm} className="text-red-400 hover:text-red-300">
                     <Trash2 className="w-4 h-4 mr-2" />
                     Clear History
                   </Button>
@@ -2235,6 +2499,39 @@ export default function SystemToolkitDashboard() {
             )}
           </DialogContent>
         </Dialog>
+        
+        {/* Confirmation Dialog */}
+        <AlertDialog open={confirmDialog?.isOpen} onOpenChange={(open) => !open && closeConfirmation()}>
+          <AlertDialogContent className={isDarkMode ? 'bg-gray-900 border-gray-800' : 'bg-white'}>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                {confirmDialog?.variant === 'danger' ? (
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                )}
+                {confirmDialog?.title}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {confirmDialog?.description}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel className={isDarkMode ? 'bg-gray-800 border-gray-700 hover:bg-gray-700' : ''}>
+                Cancel
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDialog?.onConfirm}
+                className={confirmDialog?.variant === 'danger' 
+                  ? 'bg-red-600 hover:bg-red-700 text-white' 
+                  : 'bg-yellow-600 hover:bg-yellow-700 text-white'
+                }
+              >
+                {confirmDialog?.variant === 'danger' ? 'Delete' : 'Confirm'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </TooltipProvider>
   )
