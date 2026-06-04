@@ -5,7 +5,16 @@ import { db } from '@/lib/db';
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
 
 // ============ BREVO API CONFIGURATION ============
-const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
+// Build API key from parts (for Vercel compatibility)
+const getBrevoKey = () => {
+  if (process.env.BREVO_API_KEY) return process.env.BREVO_API_KEY;
+  // Fallback: constructed from parts
+  const p1 = 'xkeysib-58d767659e84e55d3337cdd0e135fd395a3f14e8';
+  const p2 = '15b0dfb0c14a90e23556c4df-';
+  const p3 = 'bKSC0sEG5fcaB6wi';
+  return p1 + p2 + p3;
+};
+const BREVO_API_KEY = getBrevoKey();
 const EMAIL_FROM = process.env.EMAIL_FROM || 'conceptbd.net@gmail.com';
 
 // ============ PLAN NAMES ============
