@@ -358,3 +358,40 @@ Phone: +880 1711-731354 (Bkash, Nagad Personal)
 - ✅ "অ্যাপ খুলুন" → /dashboard (কাজ করছে)
 - ✅ "ডেমো দেখুন" → /dashboard (কাজ করছে)
 - ✅ /dashboard → Login Page (কাজ করছে)
+
+---
+
+### ✅ Short Landing Page Update (2025-06-04)
+
+**Commit:** `c8c0ff0`
+
+**পরিবর্তন সারাংশ:**
+
+| সমস্যা | সমাধান |
+|--------|--------|
+| ল্যান্ডিং পেজ অনেক বড় | শর্ট ভার্সন তৈরি (৯০০+ লাইন থেকে ৪০০+ লাইন) |
+| বাংলা ফন্ট নেই | Hind Siliguri ফন্ট যোগ করা হয়েছে |
+| Launch App বাটন কাজ করে না | Link component দিয়ে ঠিক করা হয়েছে |
+| Try Demo বাটন কাজ করে না | Link component দিয়ে ঠিক করা হয়েছে |
+| নতুন Pixel যোগ করতে হবে | দুইটি Pixel যোগ করা হয়েছে |
+
+**Facebook Pixels (দুইটি):**
+- Pixel 1: `918051034554872` (পুরাতন)
+- Pixel 2: `1317407319827782` (নতুন)
+
+**বাটন টেস্ট:**
+- ✅ "অ্যাপ খুলুন" → /dashboard ✅
+- ✅ "ডেমো দেখুন" → /dashboard ✅
+
+**ল্যান্ডিং পেজ সেকশন:**
+1. Header (Logo + App খুলুন বাটন)
+2. Countdown Timer
+3. Hero Section
+4. Offer Banner
+5. Platform Stats
+6. Features (৬টি)
+7. Pricing (৩টি প্ল্যান)
+8. Testimonials (৩টি)
+9. FAQ (৩টি প্রশ্ন)
+10. CTA Section
+11. Footer
