@@ -17,6 +17,9 @@ const getBrevoKey = () => {
 const BREVO_API_KEY = getBrevoKey();
 const EMAIL_FROM = process.env.EMAIL_FROM || 'conceptbd.net@gmail.com';
 
+// Store last email error for debugging
+let lastEmailError: any = null;
+
 // ============ PLAN NAMES ============
 const PLAN_NAMES: Record<string, string> = {
   basic: 'বেসিক',
@@ -205,10 +208,12 @@ async function sendWelcomeEmail(order: {
     if (response.ok) {
       const result = await response.json();
       console.log('✅ Welcome email sent! Message ID:', result.messageId);
+      lastEmailError = null;
       return true;
     } else {
       const errorText = await response.text();
       console.error('⚠️ Email failed:', response.status, errorText);
+      lastEmailError = { status: response.status, error: errorText };
       return false;
     }
   } catch (error) {
@@ -396,7 +401,8 @@ export async function POST(request: NextRequest) {
       message: 'Order created successfully',
       emailSent,
       googleSheetsSync: sheetsSync,
-      dbSaved
+      dbSaved,
+      debug: lastEmailError ? { emailError: lastEmailError } : undefined
     });
 
   } catch (error) {
