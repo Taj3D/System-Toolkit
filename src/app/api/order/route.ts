@@ -210,49 +210,61 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create order in database
-    const order = await db.order.create({
-      data: {
-        name,
-        mobile,
-        email: email || null,
-        plan,
-        amount,
-        status: 'pending'
-      }
+    // Generate order ID
+    const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const orderDate = new Date();
+
+    // Try to save to database (may fail on serverless)
+    let dbSaved = false;
+    try {
+      await db.order.create({
+        data: {
+          id: orderId,
+          name,
+          mobile,
+          email: email || null,
+          plan,
+          amount,
+          status: 'pending'
+        }
+      });
+      dbSaved = true;
+      console.log('✅ Order saved to database:', orderId);
+    } catch (dbError) {
+      console.log('⚠️ Database save failed (serverless), using external storage only');
+    }
+
+    // Send to Google Sheets (primary storage for production)
+    await sendToGoogleSheets({
+      id: orderId,
+      name,
+      mobile,
+      email: email || null,
+      plan,
+      amount,
+      createdAt: orderDate
     });
 
-    console.log('✅ Order created:', order.id);
-
-    // Send to Google Sheets (non-blocking)
-    sendToGoogleSheets({
-      id: order.id,
-      name: order.name,
-      mobile: order.mobile,
-      email: order.email,
-      plan: order.plan,
-      amount: order.amount,
-      createdAt: order.createdAt
-    }).catch(err => console.error('Google Sheets error:', err));
-
-    // Send welcome email (non-blocking)
+    // Send welcome email
+    let emailSent = false;
     if (email) {
-      sendWelcomeEmail({
-        id: order.id,
-        name: order.name,
-        mobile: order.mobile,
-        email: order.email,
-        plan: order.plan,
-        amount: order.amount
-      }).catch(err => console.error('Email error:', err));
+      emailSent = await sendWelcomeEmail({
+        id: orderId,
+        name,
+        mobile,
+        email,
+        plan,
+        amount
+      });
     }
 
     return NextResponse.json({
       success: true,
-      orderId: order.id,
+      orderId: orderId,
       message: 'Order created successfully',
-      emailSent: !!email,
-      googleSheetsSync: !!GOOGLE_SHEETS_WEBHOOK_URL
+      emailSent,
+      googleSheetsSync: !!GOOGLE_SHEETS_WEBHOOK_URL,
+      dbSaved
     });
 
   } catch (error) {
