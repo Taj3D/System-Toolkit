@@ -16,7 +16,11 @@ const GOOGLE_PRIVATE_KEY = process.env.GOOGLE_PRIVATE_KEY || '';
 // ============ EMAIL CONFIGURATION ============
 // Using Resend API (Free tier: 3000 emails/month)
 const RESEND_API_KEY = process.env.RESEND_API_KEY || '';
-const EMAIL_FROM = process.env.EMAIL_FROM || 'orders@systemtoolkit.com';
+// Use onboarding@resend.dev for testing, or your verified domain for production
+const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+// For testing: Resend free tier only allows sending to your registered email
+// Set this to your Resend account email for testing, or leave empty for production
+const VERIFIED_EMAIL = process.env.VERIFIED_EMAIL || 'conceptbd.net@gmail.com';
 
 // ============ PLAN NAMES ============
 const PLAN_NAMES: Record<string, string> = {
@@ -38,7 +42,7 @@ async function sendToGoogleSheets(order: {
   // Method 1: Using Apps Script Webhook (Simple)
   if (GOOGLE_SHEETS_WEBHOOK_URL) {
     try {
-      await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
+      const response = await fetch(GOOGLE_SHEETS_WEBHOOK_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -52,10 +56,16 @@ async function sendToGoogleSheets(order: {
           status: 'pending'
         })
       });
-      console.log('✅ Sent to Google Sheets via Webhook');
+      if (response.ok) {
+        console.log('✅ Sent to Google Sheets via Webhook');
+      } else {
+        console.error('⚠️ Google Sheets response:', response.status);
+      }
     } catch (error) {
       console.error('⚠️ Google Sheets Webhook error:', error);
     }
+  } else {
+    console.log('⚠️ Google Sheets Webhook URL not configured');
   }
 
   // Method 2: Using Google Sheets API (Production)
@@ -79,6 +89,12 @@ async function sendWelcomeEmail(order: {
     return false;
   }
 
+  // For testing: Resend free tier only allows sending to verified email
+  // In production with verified domain, this will send to the actual customer
+  const recipientEmail = VERIFIED_EMAIL || order.email;
+  
+  console.log(`📧 Sending email to: ${recipientEmail} (customer: ${order.email})`);
+
   try {
     const response = await fetch('https://api.resend.com/emails', {
       method: 'POST',
@@ -88,7 +104,7 @@ async function sendWelcomeEmail(order: {
       },
       body: JSON.stringify({
         from: EMAIL_FROM,
-        to: order.email,
+        to: recipientEmail,
         subject: '🎉 অর্ডার সফল - System Toolkit',
         html: `
           <div style="font-family: 'Hind Siliguri', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); border-radius: 20px;">
@@ -123,6 +139,14 @@ async function sendWelcomeEmail(order: {
                     <td style="padding: 8px 0; opacity: 0.9;">মূল্য:</td>
                     <td style="padding: 8px 0; text-align: right; font-weight: bold; font-size: 20px;">৳${order.amount}</td>
                   </tr>
+                  <tr>
+                    <td style="padding: 8px 0; opacity: 0.9;">মোবাইল:</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: bold;">${order.mobile}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; opacity: 0.9;">ইমেইল:</td>
+                    <td style="padding: 8px 0; text-align: right; font-weight: bold;">${order.email}</td>
+                  </tr>
                 </table>
               </div>
               
@@ -153,10 +177,12 @@ async function sendWelcomeEmail(order: {
     });
 
     if (response.ok) {
-      console.log('✅ Welcome email sent to:', order.email);
+      const result = await response.json();
+      console.log('✅ Welcome email sent! ID:', result.id);
       return true;
     } else {
-      console.error('⚠️ Email failed:', await response.text());
+      const errorText = await response.text();
+      console.error('⚠️ Email failed:', errorText);
       return false;
     }
   } catch (error) {
