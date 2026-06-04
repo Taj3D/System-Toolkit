@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -29,4 +26,18 @@ model Post {
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// Order Model for System Toolkit
+model Order {
+  id          String   @id @default(cuid())
+  name        String
+  mobile      String
+  email       String?
+  plan        String
+  amount      Int
+  status      String   @default("pending") // pending, paid, delivered
+  paymentMethod String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
