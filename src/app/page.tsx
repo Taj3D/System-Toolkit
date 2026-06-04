@@ -2510,7 +2510,7 @@ export default function SystemToolkitDashboard() {
                     className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 transition-all duration-200 hover:scale-105 active:scale-95"
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w1')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <Cpu className="w-4 h-4 mr-2" />
@@ -2537,7 +2537,7 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-blue-500/50 text-blue-300 hover:bg-blue-600/20' : 'border-blue-300 text-blue-600 hover:bg-blue-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w7')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <Download className="w-4 h-4 mr-2" />
@@ -2564,7 +2564,7 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-red-500/50 text-red-300 hover:bg-red-600/20' : 'border-red-300 text-red-600 hover:bg-red-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w23')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <HardDrive className="w-4 h-4 mr-2" />
@@ -2576,7 +2576,7 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-amber-500/50 text-amber-300 hover:bg-amber-600/20' : 'border-amber-300 text-amber-600 hover:bg-amber-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w25')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
@@ -2588,7 +2588,7 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-teal-500/50 text-teal-300 hover:bg-teal-600/20' : 'border-teal-300 text-teal-600 hover:bg-teal-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w28')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <Sparkles className="w-4 h-4 mr-2" />
@@ -2601,7 +2601,7 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-pink-500/50 text-pink-300 hover:bg-pink-600/20' : 'border-pink-300 text-pink-600 hover:bg-pink-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w31')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <Wifi className="w-4 h-4 mr-2" />
@@ -2613,7 +2613,7 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-indigo-500/50 text-indigo-300 hover:bg-indigo-600/20' : 'border-indigo-300 text-indigo-600 hover:bg-indigo-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w30')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <RefreshCw className="w-4 h-4 mr-2" />
@@ -2625,7 +2625,7 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-yellow-500/50 text-yellow-300 hover:bg-yellow-600/20' : 'border-yellow-300 text-yellow-600 hover:bg-yellow-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w37')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <Trash2 className="w-4 h-4 mr-2" />
@@ -2637,7 +2637,7 @@ export default function SystemToolkitDashboard() {
                     className={isDarkMode ? 'border-green-500/50 text-green-300 hover:bg-green-600/20' : 'border-green-300 text-green-600 hover:bg-green-100'}
                     onClick={() => {
                       const tool = TOOLS.find(t => t.id === 'w38')
-                      if (tool) startAutoInstall(tool)
+                      if (tool) executeScript(tool)
                     }}
                   >
                     <Battery className="w-4 h-4 mr-2" />
