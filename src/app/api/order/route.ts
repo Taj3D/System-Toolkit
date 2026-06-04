@@ -4,9 +4,9 @@ import { db } from '@/lib/db';
 // ============ GOOGLE SHEETS CONFIGURATION ============
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
 
-// ============ WEB3FORMS CONFIGURATION ============
-const WEB3FORMS_ACCESS_KEY = process.env.WEB3FORMS_ACCESS_KEY || '6a0c50ef-51fb-448d-a055-8086e0185a9a';
-const NOTIFICATION_EMAIL = process.env.NOTIFICATION_EMAIL || 'conceptbd.net@gmail.com';
+// ============ BREVO API CONFIGURATION ============
+const BREVO_API_KEY = process.env.BREVO_API_KEY || '';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'conceptbd.net@gmail.com';
 
 // ============ PLAN NAMES ============
 const PLAN_NAMES: Record<string, string> = {
@@ -63,7 +63,7 @@ async function sendToGoogleSheets(order: {
   }
 }
 
-// ============ EMAIL FUNCTIONS (WEB3FORMS) ============
+// ============ EMAIL FUNCTIONS (BREVO API) ============
 async function sendWelcomeEmail(order: {
   id: string;
   name: string;
@@ -72,121 +72,239 @@ async function sendWelcomeEmail(order: {
   plan: string;
   amount: number;
 }) {
-  console.log(`📧 Sending email via Web3Forms to: ${order.email || NOTIFICATION_EMAIL}`);
+  if (!order.email || !BREVO_API_KEY) {
+    console.log('⚠️ No email or API key, skipping customer email');
+    return false;
+  }
+
+  console.log(`📧 Sending email to: ${order.email}`);
 
   const planName = PLAN_NAMES[order.plan] || order.plan;
   const orderIdShort = order.id.slice(-8).toUpperCase();
 
-  // Email to customer (if email provided)
-  if (order.email) {
-    try {
-      const customerEmailData = new URLSearchParams({
-        access_key: WEB3FORMS_ACCESS_KEY,
-        subject: `🎉 অর্ডার সফল - System Toolkit (#${orderIdShort})`,
-        email: order.email,
-        name: order.name,
-        from_name: 'System Toolkit - NextGen Digital Studio',
-        
-        // Email content
-        message: `
-আপনার অর্ডার সফলভাবে গৃহীত হয়েছে!
+  const emailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: 'Hind Siliguri', Arial, sans-serif; margin: 0; padding: 0; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+        .card { background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 20px; text-align: center; }
+        .header h1 { color: white; margin: 0; font-size: 28px; }
+        .header p { color: rgba(255,255,255,0.9); margin: 10px 0 0 0; }
+        .content { padding: 30px; }
+        .order-box { background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 20px 0; }
+        .order-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #eee; }
+        .order-row:last-child { border-bottom: none; }
+        .payment-box { background: #fff3cd; border-left: 4px solid #ffc107; padding: 15px; border-radius: 0 12px 12px 0; margin: 20px 0; }
+        .whatsapp-btn { display: inline-block; background: #25D366; color: white; padding: 15px 30px; border-radius: 50px; text-decoration: none; font-weight: bold; margin: 20px 0; }
+        .footer { text-align: center; padding: 20px; color: #888; font-size: 13px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="card">
+          <div class="header">
+            <h1>🎉 অর্ডার সফল!</h1>
+            <p>আপনার অর্ডার গৃহীত হয়েছে</p>
+          </div>
 
-📦 অর্ডার বিবরণ:
-━━━━━━━━━━━━━━━━━━━━━
-অর্ডার আইডি: #${orderIdShort}
-নাম: ${order.name}
-মোবাইল: ${order.mobile}
-ইমেইল: ${order.email}
-প্ল্যান: ${planName}
-মূল্য: ৳${order.amount}
-━━━━━━━━━━━━━━━━━━━━━
+          <div class="content">
+            <p style="font-size: 16px; color: #333;">
+              প্রিয় <strong>${order.name}</strong>,
+            </p>
 
-📱 পেমেন্ট তথ্য:
-বিকাশ/নগদ: +880 1711-731354
-পেমেন্ট করুন এবং স্ক্রিনশট WhatsApp এ পাঠান।
+            <p style="color: #555; line-height: 1.8;">
+              আপনার <strong>System Toolkit</strong> অর্ডার সফলভাবে গৃহীত হয়েছে। পেমেন্ট সম্পন্ন করার পর ১ ঘন্টার মধ্যে আপনি সফটওয়্যার অ্যাক্সেস পাবেন।
+            </p>
 
-💬 WhatsApp: https://wa.me/8801711731354
+            <div class="order-box">
+              <h3 style="margin: 0 0 15px 0; color: #667eea;">📦 অর্ডার বিবরণ</h3>
+              <div class="order-row">
+                <span>অর্ডার আইডি:</span>
+                <strong>#${orderIdShort}</strong>
+              </div>
+              <div class="order-row">
+                <span>প্ল্যান:</span>
+                <strong>${planName}</strong>
+              </div>
+              <div class="order-row">
+                <span>মূল্য:</span>
+                <strong style="font-size: 20px; color: #667eea;">৳${order.amount}</strong>
+              </div>
+              <div class="order-row">
+                <span>মোবাইল:</span>
+                <strong>${order.mobile}</strong>
+              </div>
+              <div class="order-row">
+                <span>ইমেইল:</span>
+                <strong>${order.email}</strong>
+              </div>
+            </div>
 
-পেমেন্ট সম্পন্ন হলে ১ ঘন্টার মধ্যে আপনি সফটওয়্যার অ্যাক্সেস পাবেন।
+            <div class="payment-box">
+              <p style="margin: 0; color: #856404;">
+                <strong>📱 পেমেন্ট পদ্ধতি:</strong><br>
+                বিকাশ/নগদ: <strong>+880 1711-731354</strong><br>
+                পেমেন্ট করুন এবং স্ক্রিনশট WhatsApp এ পাঠান।
+              </p>
+            </div>
 
-ধন্যবাদান্ত,
-NextGen Digital Studio
-        `.trim()
-      });
+            <div style="text-align: center;">
+              <a href="https://wa.me/8801711731354?text=${encodeURIComponent('হ্যালো, আমি অর্ডার কনফার্ম করতে চাই। অর্ডার আইডি: #' + orderIdShort)}"
+                 class="whatsapp-btn">
+                💬 WhatsApp এ যোগাযোগ করুন
+              </a>
+            </div>
+          </div>
 
-      const response = await fetch('https://api.web3forms.com/submit', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        },
-        body: customerEmailData.toString()
-      });
+          <div class="footer">
+            <p>© 2025 NextGen Digital Studio | <a href="https://www.facebook.com/nextgendigitalstudio" style="color: #667eea;">Facebook</a></p>
+          </div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
 
-      const result = await response.json();
-      if (result.success) {
-        console.log('✅ Customer email sent via Web3Forms');
-      } else {
-        console.error('⚠️ Customer email failed:', result.message);
-      }
-    } catch (error) {
-      console.error('⚠️ Customer email error:', error);
-    }
-  }
-
-  // Email notification to admin
   try {
-    const adminEmailData = new URLSearchParams({
-      access_key: WEB3FORMS_ACCESS_KEY,
-      subject: `🔔 নতুন অর্ডার - System Toolkit (#${orderIdShort})`,
-      email: NOTIFICATION_EMAIL,
-      name: 'Admin - NextGen Digital Studio',
-      from_name: 'System Toolkit Order System',
-      
-      message: `
-🎉 নতুন অর্ডার এসেছে!
-
-📦 অর্ডার বিবরণ:
-━━━━━━━━━━━━━━━━━━━━━
-অর্ডার আইডি: #${orderIdShort}
-তারিখ: ${new Date().toLocaleString('bn-BD', { timeZone: 'Asia/Dhaka' })}
-
-👤 গ্রাহক তথ্য:
-নাম: ${order.name}
-মোবাইল: ${order.mobile}
-ইমেইল: ${order.email || 'N/A'}
-
-📋 অর্ডার তথ্য:
-প্ল্যান: ${planName}
-মূল্য: ৳${order.amount}
-━━━━━━━━━━━━━━━━━━━━━
-
-যোগাযোগ করুন: +880 1711-731354
-WhatsApp: https://wa.me/8801711731354
-
-NextGen Digital Studio
-      `.trim()
-    });
-
-    const response = await fetch('https://api.web3forms.com/submit', {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'application/json'
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'api-key': BREVO_API_KEY
       },
-      body: adminEmailData.toString()
+      body: JSON.stringify({
+        sender: {
+          name: 'System Toolkit',
+          email: EMAIL_FROM
+        },
+        to: [
+          {
+            email: order.email,
+            name: order.name
+          }
+        ],
+        subject: `🎉 অর্ডার সফল - System Toolkit (#${orderIdShort})`,
+        htmlContent: emailHtml
+      })
     });
 
-    const result = await response.json();
-    if (result.success) {
-      console.log('✅ Admin notification email sent via Web3Forms');
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Welcome email sent! Message ID:', result.messageId);
       return true;
     } else {
-      console.error('⚠️ Admin email failed:', result.message);
+      const errorText = await response.text();
+      console.error('⚠️ Email failed:', errorText);
       return false;
     }
   } catch (error) {
-    console.error('⚠️ Admin email error:', error);
+    console.error('⚠️ Email error:', error);
+    return false;
+  }
+}
+
+// ============ ADMIN NOTIFICATION EMAIL ============
+async function sendAdminNotification(order: {
+  id: string;
+  name: string;
+  mobile: string;
+  email: string | null;
+  plan: string;
+  amount: number;
+}) {
+  if (!BREVO_API_KEY) {
+    return false;
+  }
+
+  const planName = PLAN_NAMES[order.plan] || order.plan;
+  const orderIdShort = order.id.slice(-8).toUpperCase();
+
+  const adminEmailHtml = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 30px; }
+        .header { background: #1a1a2e; color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
+        .info-box { background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 15px 0; }
+        .info-row { padding: 8px 0; border-bottom: 1px solid #eee; }
+        .info-row:last-child { border-bottom: none; }
+        .highlight { color: #667eea; font-weight: bold; font-size: 24px; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🔔 নতুন অর্ডার এসেছে!</h1>
+        </div>
+        
+        <div class="info-box">
+          <h3>📦 অর্ডার তথ্য</h3>
+          <div class="info-row"><strong>অর্ডার আইডি:</strong> #${orderIdShort}</div>
+          <div class="info-row"><strong>প্ল্যান:</strong> ${planName}</div>
+          <div class="info-row"><strong>মূল্য:</strong> <span class="highlight">৳${order.amount}</span></div>
+        </div>
+        
+        <div class="info-box">
+          <h3>👤 গ্রাহক তথ্য</h3>
+          <div class="info-row"><strong>নাম:</strong> ${order.name}</div>
+          <div class="info-row"><strong>মোবাইল:</strong> ${order.mobile}</div>
+          <div class="info-row"><strong>ইমেইল:</strong> ${order.email || 'N/A'}</div>
+        </div>
+        
+        <p style="text-align: center; margin-top: 20px;">
+          <a href="https://wa.me/88${order.mobile}?text=${encodeURIComponent('হ্যালো, আপনার অর্ডার #' + orderIdShort + ' এর জন্য যোগাযোগ করছি।')}"
+             style="background: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">
+            💬 WhatsApp এ যোগাযোগ করুন
+          </a>
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'accept': 'application/json',
+        'content-type': 'application/json',
+        'api-key': BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: {
+          name: 'System Toolkit Orders',
+          email: EMAIL_FROM
+        },
+        to: [
+          {
+            email: 'conceptbd.net@gmail.com',
+            name: 'Admin - NextGen Digital Studio'
+          }
+        ],
+        subject: `🔔 নতুন অর্ডার - #${orderIdShort} (${planName} - ৳${order.amount})`,
+        htmlContent: adminEmailHtml
+      })
+    });
+
+    if (response.ok) {
+      const result = await response.json();
+      console.log('✅ Admin notification sent!');
+      return true;
+    } else {
+      const errorText = await response.text();
+      console.error('⚠️ Admin notification failed:', errorText);
+      return false;
+    }
+  } catch (error) {
+    console.error('⚠️ Admin notification error:', error);
     return false;
   }
 }
@@ -209,7 +327,7 @@ export async function POST(request: NextRequest) {
     const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const orderDate = new Date();
 
-    // Try to save to database (may fail on serverless)
+    // Try to save to database
     let dbSaved = false;
     try {
       await db.order.create({
@@ -229,7 +347,7 @@ export async function POST(request: NextRequest) {
       console.log('⚠️ Database save failed (serverless), using external storage only');
     }
 
-    // Send to Google Sheets (primary storage for production)
+    // Send to Google Sheets
     const sheetsSync = await sendToGoogleSheets({
       id: orderId,
       name,
@@ -240,8 +358,21 @@ export async function POST(request: NextRequest) {
       createdAt: orderDate
     });
 
-    // Send welcome email via Web3Forms
-    const emailSent = await sendWelcomeEmail({
+    // Send welcome email to customer
+    let emailSent = false;
+    if (email) {
+      emailSent = await sendWelcomeEmail({
+        id: orderId,
+        name,
+        mobile,
+        email,
+        plan,
+        amount
+      });
+    }
+
+    // Send admin notification
+    await sendAdminNotification({
       id: orderId,
       name,
       mobile,
