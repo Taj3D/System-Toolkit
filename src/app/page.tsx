@@ -421,6 +421,130 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* ===== INLINE ORDER FORM ===== */}
+        <section id="order-form" className="py-12 px-4 bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50">
+          <div className="max-w-4xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-white rounded-3xl shadow-2xl p-8 border border-gray-100"
+            >
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-600 to-purple-600 flex items-center justify-center mx-auto mb-4 shadow-lg">
+                  <Gift className="w-8 h-8 text-white" />
+                </div>
+                <h2 className="text-2xl md:text-3xl font-bold mb-2">এখনই অর্ডার করুন</h2>
+                <p className="text-gray-500">পেমেন্ট অপশন দেখতে নিচের ফর্মটি পূরণ করুন</p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Side - Form */}
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700">আপনার নাম *</label>
+                    <Input
+                      placeholder="আপনার পূর্ণ নাম লিখুন"
+                      value={formData.name}
+                      onChange={e => setFormData({...formData, name: e.target.value})}
+                      className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700">মোবাইল নম্বর *</label>
+                    <Input
+                      placeholder="01XXXXXXXXX"
+                      value={formData.mobile}
+                      onChange={e => setFormData({...formData, mobile: e.target.value})}
+                      className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      type="tel"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700">ইমেইল (ঐচ্ছিক)</label>
+                    <Input
+                      placeholder="your@email.com"
+                      value={formData.email}
+                      onChange={e => setFormData({...formData, email: e.target.value})}
+                      className="h-12 rounded-xl border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                      type="email"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-2 text-gray-700">প্ল্যান নির্বাচন করুন *</label>
+                    <select
+                      value={selectedPlan || ''}
+                      onChange={e => setSelectedPlan(e.target.value)}
+                      className="w-full h-12 rounded-xl border border-gray-200 px-4 focus:border-blue-500 focus:ring-blue-500 bg-white"
+                    >
+                      <option value="">-- প্ল্যান নির্বাচন করুন --</option>
+                      {PRICING_PLANS.map(plan => (
+                        <option key={plan.id} value={plan.id}>
+                          {plan.name} - ৳{plan.price} (৳{plan.originalPrice} থেকে ৫০% ছাড়)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Right Side - Plan Preview & CTA */}
+                <div className="bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl p-6 text-white">
+                  {selectedPlan ? (
+                    <>
+                      <div className="text-center mb-6">
+                        <h3 className="text-xl font-bold mb-2">
+                          {PRICING_PLANS.find(p => p.id === selectedPlan)?.name} প্ল্যান
+                        </h3>
+                        <div className="flex items-baseline justify-center gap-2">
+                          <span className="text-4xl font-bold">৳{PRICING_PLANS.find(p => p.id === selectedPlan)?.price}</span>
+                          <span className="line-through text-white/60">৳{PRICING_PLANS.find(p => p.id === selectedPlan)?.originalPrice}</span>
+                        </div>
+                        <span className="inline-block mt-2 px-3 py-1 bg-yellow-400 text-gray-900 rounded-full text-sm font-bold">
+                          ৫০% ছাড়!
+                        </span>
+                      </div>
+                      <ul className="space-y-2 mb-6">
+                        {PRICING_PLANS.find(p => p.id === selectedPlan)?.features.map((f, i) => (
+                          <li key={i} className="flex items-center gap-2">
+                            <CheckCircle2 className="w-5 h-5 text-green-300" />
+                            <span>{f}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Gift className="w-16 h-16 mx-auto mb-4 text-white/60" />
+                      <p className="text-white/80">বাম পাশে থেকে প্ল্যান নির্বাচন করুন</p>
+                    </div>
+                  )}
+
+                  <Button
+                    className="w-full py-6 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-bold rounded-xl text-lg shadow-xl"
+                    onClick={() => {
+                      if (!formData.name || !formData.mobile || !selectedPlan) {
+                        alert('অনুগ্রহ করে সকল তথ্য পূরণ করুন')
+                        return
+                      }
+                      setOrderStep('form')
+                      setShowOrderModal(true)
+                    }}
+                  >
+                    পেমেন্ট অপশন দেখুন <ArrowRight className="ml-2 w-5 h-5" />
+                  </Button>
+                </div>
+              </div>
+
+              {/* Trust Badges */}
+              <div className="flex flex-wrap justify-center gap-4 mt-8 pt-6 border-t border-gray-100">
+                <span className="flex items-center gap-1 text-sm text-gray-600"><CheckCircle2 className="w-4 h-4 text-green-500" /> ১০০% নিরাপদ পেমেন্ট</span>
+                <span className="flex items-center gap-1 text-sm text-gray-600"><Clock className="w-4 h-4 text-blue-500" /> ১ ঘন্টায় ডেলিভারি</span>
+                <span className="flex items-center gap-1 text-sm text-gray-600"><Shield className="w-4 h-4 text-purple-500" /> ৭ দিনের রিফান্ড</span>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
         {/* ===== TESTIMONIALS ===== */}
         <section className="py-12 px-4 bg-gray-50">
           <div className="max-w-5xl mx-auto">
