@@ -7,9 +7,8 @@ const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
 
 // ============ RESEND CONFIGURATION ============
 const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_Gq333Hz1_68k6qaUExt32U5vPri1E43zv';
-// For sending to any customer: verify your domain at resend.com/domains
-// Then update EMAIL_FROM to your verified domain email
-const EMAIL_FROM = 'onboarding@resend.dev';
+// Verified domain: nextgendigitalstudio.com
+const EMAIL_FROM = 'noreply@nextgendigitalstudio.com';
 
 // Initialize Resend
 const resend = new Resend(RESEND_API_KEY);
