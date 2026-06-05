@@ -171,7 +171,7 @@ export default function LandingPage() {
 
   return (
     <>
-      {/* Facebook Pixels - Both IDs */}
+      {/* Meta Pixel Code */}
       <script
         dangerouslySetInnerHTML={{
           __html: `
@@ -182,6 +182,13 @@ export default function LandingPage() {
           `
         }}
       />
+      <noscript>
+        <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=918051034554872&ev=PageView&noscript=1" alt="" />
+      </noscript>
+      <noscript>
+        <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=1317407319827782&ev=PageView&noscript=1" alt="" />
+      </noscript>
+      {/* End Meta Pixel Code */}
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white" style={{ fontFamily: "'Hind Siliguri', sans-serif" }}>
         
