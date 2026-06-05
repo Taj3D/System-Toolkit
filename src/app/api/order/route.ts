@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { Resend } from 'resend';
 import { db } from '@/lib/db';
+import crypto from 'crypto';
 
 // ============ GOOGLE SHEETS CONFIGURATION ============
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
@@ -12,6 +13,10 @@ const EMAIL_FROM = 'noreply@nextgendigitalstudio.com';
 
 // Initialize Resend
 const resend = new Resend(RESEND_API_KEY);
+
+// ============ FACEBOOK CONVERSIONS API CONFIG ============
+const FACEBOOK_PIXEL_ID = '1055888723429361';
+const FACEBOOK_ACCESS_TOKEN = process.env.FB_ACCESS_TOKEN || 'EAAXExUUyB1QBRh9bA0s2Wslhsjmaru1h5hdzZBVXJ0kP6XyY7Sv4cJOw9rjZBtdb9QmxT73wJcZBeGSbGkZAkEFfJv9RZBy47T8qLl45ZCqBW45hZBZCdFwbFCt9LmgZAHSMNbGsaHjL1B13Ew63Lss8h06WPqVPlEBd8JT5ZB3PVheY67PMv5ZBUJKZB3rKrzqtAvZBKDQZDZD';
 
 // ============ PLAN NAMES ============
 const PLAN_NAMES: Record<string, string> = {
@@ -211,11 +216,79 @@ async function sendCustomerEmail(order: {
   }
 }
 
+// ============ FACEBOOK CONVERSIONS API ============
+function hashData(data: string): string {
+  if (!data) return '';
+  return crypto.createHash('sha256').update(data.trim().toLowerCase()).digest('hex');
+}
+
+async function sendFacebookPurchaseEvent(order: {
+  id: string;
+  name: string;
+  mobile: string;
+  email: string | null;
+  plan: string;
+  amount: number;
+}, clientInfo: { ip: string; userAgent: string }, eventId: string) {
+  const planName = PLAN_NAMES[order.plan] || order.plan;
+  
+  const userData: Record<string, string> = {};
+  
+  // Hash and add user data
+  if (order.email) userData.em = hashData(order.email);
+  if (order.mobile) userData.ph = hashData(order.mobile.replace(/[^0-9]/g, ''));
+  if (clientInfo.ip) userData.client_ip_address = clientInfo.ip;
+  if (clientInfo.userAgent) userData.client_user_agent = clientInfo.userAgent;
+
+  const event = {
+    event_name: 'Purchase',
+    event_time: Math.floor(Date.now() / 1000),
+    action_source: 'website',
+    event_id: eventId,
+    user_data: userData,
+    custom_data: {
+      currency: 'BDT',
+      value: order.amount,
+      content_name: `System Toolkit - ${planName}`,
+      content_category: 'Software'
+    }
+  };
+
+  try {
+    const response = await fetch(
+      `https://graph.facebook.com/v18.0/${FACEBOOK_PIXEL_ID}/events`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          data: [event],
+          access_token: FACEBOOK_ACCESS_TOKEN
+        })
+      }
+    );
+
+    const result = await response.json();
+    
+    if (result.error) {
+      console.error('⚠️ Facebook API Error:', result.error);
+      return false;
+    }
+
+    console.log('✅ Facebook Purchase Event sent! Event ID:', eventId);
+    return true;
+  } catch (error) {
+    console.error('⚠️ Facebook Event Error:', error);
+    return false;
+  }
+}
+
 // ============ MAIN ORDER API ============
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { name, mobile, email, plan, amount } = body;
+    const { name, mobile, email, plan, amount, eventId } = body;
 
     // Validate required fields
     if (!name || !mobile || !plan || !amount) {
@@ -227,6 +300,8 @@ export async function POST(request: NextRequest) {
 
     // Generate order ID
     const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Use client-provided eventId or generate new one
+    const fbEventId = eventId || `PURCHASE_${orderId}`;
     const orderDate = new Date();
 
     // Try to save to database
@@ -273,6 +348,21 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    // Send Facebook Purchase Event (Server-side)
+    const clientIp = request.headers.get('x-forwarded-for') || 
+                     request.headers.get('x-real-ip') || 
+                     '';
+    const clientUserAgent = request.headers.get('user-agent') || '';
+    
+    const fbEventSent = await sendFacebookPurchaseEvent({
+      id: orderId,
+      name,
+      mobile,
+      email: email || null,
+      plan,
+      amount
+    }, { ip: clientIp, userAgent: clientUserAgent }, fbEventId);
+
     return NextResponse.json({
       success: true,
       orderId: orderId,
@@ -280,6 +370,7 @@ export async function POST(request: NextRequest) {
       emailSent,
       googleSheetsSync: sheetsSync,
       dbSaved,
+      fbEventSent,
       emailError: lastEmailError
     });
 

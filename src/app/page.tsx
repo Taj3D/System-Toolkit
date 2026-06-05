@@ -96,6 +96,19 @@ export default function LandingPage() {
     }
     setIsSubmitting(true)
     
+    // Generate unique event ID for Facebook deduplication
+    const eventId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    const plan = PRICING_PLANS.find(p => p.id === selectedPlan)
+    
+    // Track Facebook Pixel - InitiateCheckout (client-side)
+    if (typeof window !== 'undefined' && (window as any).fbq) {
+      (window as any).fbq('track', 'InitiateCheckout', {
+        content_name: plan?.name,
+        value: plan?.price,
+        currency: 'BDT'
+      }, { eventID: eventId })
+    }
+    
     try {
       const response = await fetch('/api/order', {
         method: 'POST',
@@ -103,7 +116,8 @@ export default function LandingPage() {
         body: JSON.stringify({
           ...formData,
           plan: selectedPlan,
-          amount: PRICING_PLANS.find(p => p.id === selectedPlan)?.price || 0
+          amount: plan?.price || 0,
+          eventId // Send eventId for server-side deduplication
         })
       })
       
@@ -136,12 +150,13 @@ export default function LandingPage() {
         `অর্ডার কনফার্ম করতে পেমেন্ট সম্পন্ন করুন।`
       )
       
-      // Track Facebook Pixel
+      // Track Facebook Pixel - AddPaymentInfo
       if (typeof window !== 'undefined' && (window as any).fbq) {
-        (window as any).fbq('track', 'InitiateCheckout', {
+        (window as any).fbq('track', 'AddPaymentInfo', {
           content_name: plan?.name,
           value: plan?.price,
-          currency: 'BDT'
+          currency: 'BDT',
+          payment_method: method
         })
       }
       
@@ -171,22 +186,18 @@ export default function LandingPage() {
 
   return (
     <>
-      {/* Meta Pixel Code */}
+      {/* Meta Pixel Code - Pixel ID: 1055888723429361 */}
       <script
         dangerouslySetInnerHTML={{
           __html: `
             !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '918051034554872');
-            fbq('init', '1317407319827782');
+            fbq('init', '1055888723429361');
             fbq('track', 'PageView');
           `
         }}
       />
       <noscript>
-        <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=918051034554872&ev=PageView&noscript=1" alt="" />
-      </noscript>
-      <noscript>
-        <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=1317407319827782&ev=PageView&noscript=1" alt="" />
+        <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=1055888723429361&ev=PageView&noscript=1" alt="" />
       </noscript>
       {/* End Meta Pixel Code */}
 
