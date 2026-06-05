@@ -1,109 +1,147 @@
 /**
  * ============================================
  * GOOGLE APPS SCRIPT FOR SYSTEM TOOLKIT
+ * Updated: Individual query parameters support
  * ============================================
  * 
- * এই কোডটি Google Apps Script এ পেস্ট করুন
- * 
- * ধাপ ১: https://script.google.com যান
- * ধাপ ২: "New Project" ক্লিক করুন
- * ধাপ ৩: নিচের সম্পূর্ণ কোড কপি করে পেস্ট করুন
- * ধাপ ৪: "Save" করুন (Ctrl+S)
- * ধাপ ৫: "Deploy" > "New deployment" ক্লিক করুন
- * ধাপ ৬: Type: "Web app" সিলেক্ট করুন
- * ধাপ ৭: Execute as: "Me", Who has access: "Anyone"
- * ধাপ ৮: "Deploy" ক্লিক করুন এবং URL কপি করুন
+ * এই কোডটি আপনার Google Apps Script এ পেস্ট করুন
  * 
  * ============================================
  */
 
-// Google Sheet ID - আপনার Google Sheet ID দিন
+// Google Sheet ID
 const SPREADSHEET_ID = '1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU';
-const SHEET_NAME = 'Sheet1'; // অথবা আপনার শীটের নাম
+const SHEET_NAME = 'Sheet1';
 
-// doGet - Webhook URL টেস্ট করার জন্য
+// ===== HANDLE GET REQUESTS =====
 function doGet(e) {
-  return ContentService.createTextOutput(
-    JSON.stringify({
-      status: 'success',
-      message: 'System Toolkit Webhook is working!',
-      timestamp: new Date().toISOString()
-    })
-  ).setMimeType(ContentService.MimeType.JSON);
+  try {
+    const params = e.parameter;
+    
+    // Check if this is an addOrder action
+    if (params.action === 'addOrder' || params.orderId) {
+      const data = {
+        timestamp: params.timestamp || new Date().toISOString(),
+        orderId: params.orderId || 'ORD-' + Date.now(),
+        name: params.name || 'N/A',
+        mobile: params.mobile || 'N/A',
+        email: params.email || 'N/A',
+        plan: params.plan || 'N/A',
+        amount: params.amount || 0,
+        status: params.status || 'pending'
+      };
+      
+      return saveToSheet(data);
+    }
+    
+    // Test endpoint - no parameters
+    return ContentService.createTextOutput(
+      JSON.stringify({
+        status: 'success',
+        message: 'System Toolkit Webhook is ready!',
+        timestamp: new Date().toISOString(),
+        sheetId: SPREADSHEET_ID
+      })
+    ).setMimeType(ContentService.MimeType.JSON);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(
+      JSON.stringify({
+        status: 'error',
+        message: error.toString(),
+        timestamp: new Date().toISOString()
+      })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
 }
 
-// doPost - অর্ডার ডেটা গ্রহণ করার জন্য
+// ===== HANDLE POST REQUESTS =====
 function doPost(e) {
   try {
-    // Request body parse করুন
+    const params = e.parameter;
     let data;
+    
     if (e.postData && e.postData.contents) {
-      data = JSON.parse(e.postData.contents);
-    } else if (e.parameter && e.parameter.data) {
-      data = JSON.parse(e.parameter.data);
+      try {
+        data = JSON.parse(e.postData.contents);
+      } catch (parseError) {
+        data = params;
+      }
     } else {
-      // Fallback - query parameters
-      data = e.parameter;
+      data = params;
     }
     
-    console.log('Received data:', data);
+    // Normalize data
+    data = {
+      timestamp: data.timestamp || new Date().toISOString(),
+      orderId: data.orderId || 'ORD-' + Date.now(),
+      name: data.name || 'N/A',
+      mobile: data.mobile || 'N/A',
+      email: data.email || 'N/A',
+      plan: data.plan || 'N/A',
+      amount: data.amount || 0,
+      status: data.status || 'pending'
+    };
     
-    // Google Sheet খুলুন
+    return saveToSheet(data);
+    
+  } catch (error) {
+    return ContentService.createTextOutput(
+      JSON.stringify({
+        status: 'error',
+        message: error.toString()
+      })
+    ).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+// ===== SAVE TO SHEET =====
+function saveToSheet(data) {
+  try {
     const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    const sheet = ss.getSheetByName(SHEET_NAME);
+    let sheet = ss.getSheetByName(SHEET_NAME);
     
+    // Create sheet if doesn't exist
     if (!sheet) {
-      // যদি শীট না পায়, নতুন শীট তৈরি করুন
-      const newSheet = ss.insertSheet(SHEET_NAME);
-      // Headers যোগ করুন
-      newSheet.appendRow([
+      sheet = ss.insertSheet(SHEET_NAME);
+    }
+    
+    // Add headers if empty
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
         'Timestamp',
-        'Order ID',
+        'Order ID', 
         'Name',
         'Mobile',
         'Email',
         'Plan',
-        'Amount',
+        'Amount (৳)',
         'Status'
       ]);
-      // Format headers
-      newSheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#4CAF50').setFontColor('white');
+      sheet.getRange(1, 1, 1, 8)
+        .setFontWeight('bold')
+        .setBackground('#10b981')
+        .setFontColor('white')
+        .setHorizontalAlignment('center')
+        .setFrozen(true);
     }
     
-    const targetSheet = ss.getSheetByName(SHEET_NAME) || ss.insertSheet(SHEET_NAME);
-    
-    // Headers আছে কিনা চেক করুন
-    const lastRow = targetSheet.getLastRow();
-    if (lastRow === 0) {
-      targetSheet.appendRow([
-        'Timestamp',
-        'Order ID',
-        'Name',
-        'Mobile',
-        'Email',
-        'Plan',
-        'Amount',
-        'Status'
-      ]);
-      targetSheet.getRange(1, 1, 1, 8).setFontWeight('bold').setBackground('#4CAF50').setFontColor('white');
-    }
-    
-    // ডেটা যোগ করুন
-    targetSheet.appendRow([
-      data.timestamp || new Date().toISOString(),
-      data.orderId || 'N/A',
-      data.name || 'N/A',
-      data.mobile || 'N/A',
-      data.email || 'N/A',
-      data.plan || 'N/A',
-      data.amount || 0,
-      data.status || 'pending'
+    // Append order data
+    sheet.appendRow([
+      data.timestamp,
+      data.orderId,
+      data.name,
+      data.mobile,
+      data.email,
+      data.plan,
+      data.amount,
+      data.status
     ]);
     
-    // Auto-resize columns
-    targetSheet.autoResizeColumns(1, 8);
+    // Auto-resize
+    sheet.autoResizeColumns(1, 8);
     
-    console.log('Data saved to Google Sheet successfully');
+    console.log('✅ Order saved:', data.orderId);
     
     return ContentService.createTextOutput(
       JSON.stringify({
@@ -115,42 +153,36 @@ function doPost(e) {
     ).setMimeType(ContentService.MimeType.JSON);
     
   } catch (error) {
-    console.error('Error processing request:', error);
-    
+    console.error('❌ Error:', error);
     return ContentService.createTextOutput(
       JSON.stringify({
         status: 'error',
-        message: error.toString(),
-        timestamp: new Date().toISOString()
+        message: 'Failed to save: ' + error.toString()
       })
     ).setMimeType(ContentService.MimeType.JSON);
   }
 }
 
-// Test function - সরাসরি run করে টেস্ট করুন
-function testAddOrder() {
-  const testData = {
-    timestamp: new Date().toISOString(),
-    orderId: 'TEST-' + Date.now(),
-    name: 'Test User',
-    mobile: '01711999999',
-    email: 'test@example.com',
-    plan: 'বেসিক',
-    amount: 299,
-    status: 'pending'
-  };
-  
+// ===== TEST FUNCTION =====
+function testOrder() {
   const mockEvent = {
-    postData: {
-      contents: JSON.stringify(testData)
+    parameter: {
+      action: 'addOrder',
+      orderId: 'TEST-' + Date.now(),
+      name: 'Test from Script Editor',
+      mobile: '01711999999',
+      email: 'test@example.com',
+      plan: 'বেসিক',
+      amount: '299',
+      status: 'pending'
     }
   };
   
-  const result = doPost(mockEvent);
+  const result = doGet(mockEvent);
   console.log(result.getContent());
 }
 
-// Initialize sheet with headers
+// ===== INIT SHEET =====
 function initSheet() {
   const ss = SpreadsheetApp.openById(SPREADSHEET_ID);
   let sheet = ss.getSheetByName(SHEET_NAME);
@@ -159,27 +191,15 @@ function initSheet() {
     sheet = ss.insertSheet(SHEET_NAME);
   }
   
-  // Clear existing data (optional)
-  // sheet.clear();
-  
-  // Add headers if sheet is empty
   if (sheet.getLastRow() === 0) {
     sheet.appendRow([
-      'Timestamp',
-      'Order ID',
-      'Name',
-      'Mobile',
-      'Email',
-      'Plan',
-      'Amount',
-      'Status'
+      'Timestamp', 'Order ID', 'Name', 'Mobile', 'Email', 'Plan', 'Amount (৳)', 'Status'
     ]);
     sheet.getRange(1, 1, 1, 8)
       .setFontWeight('bold')
-      .setBackground('#4CAF50')
-      .setFontColor('white')
-      .setHorizontalAlignment('center');
+      .setBackground('#10b981')
+      .setFontColor('white');
   }
   
-  console.log('Sheet initialized successfully!');
+  console.log('Sheet initialized!');
 }
