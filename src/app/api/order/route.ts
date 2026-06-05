@@ -211,6 +211,8 @@ function getAdminEmailHtml(order: { name: string; mobile: string; email: string 
 }
 
 // ============ EMAIL FUNCTIONS (RESEND) ============
+let lastEmailError: any = null;
+
 async function sendWelcomeEmail(order: {
   id: string;
   name: string;
@@ -244,6 +246,7 @@ async function sendWelcomeEmail(order: {
 
     if (error) {
       console.error('⚠️ Resend error:', error);
+      lastEmailError = error;
       return false;
     }
 
@@ -375,7 +378,13 @@ export async function POST(request: NextRequest) {
       message: 'Order created successfully',
       emailSent,
       googleSheetsSync: sheetsSync,
-      dbSaved
+      dbSaved,
+      debug: {
+        hasResendKey: !!RESEND_API_KEY,
+        emailFrom: EMAIL_FROM,
+        customerEmail: email || null,
+        lastError: lastEmailError
+      }
     });
 
   } catch (error) {
