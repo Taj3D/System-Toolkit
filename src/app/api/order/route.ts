@@ -143,13 +143,13 @@ function getCustomerEmailHtml(order: { name: string; mobile: string; email: stri
             <div class="payment-box">
               <p style="margin: 0; color: #92400e;">
                 <strong>📱 পেমেন্ট পদ্ধতি:</strong><br>
-                বিকাশ/নগদ: <strong>+880 1973-135466</strong><br>
+                বিকাশ/নগদ: <strong>+880 1711-731354</strong><br>
                 পেমেন্ট করুন এবং স্ক্রিনশট WhatsApp এ পাঠান।
               </p>
             </div>
 
             <div style="text-align: center;">
-              <a href="https://wa.me/8801973135466?text=${encodeURIComponent('হ্যালো, আমি অর্ডার কনফার্ম করতে চাই। অর্ডার আইডি: #' + order.orderIdShort)}"
+              <a href="https://wa.me/8801711731354?text=${encodeURIComponent('হ্যালো, আমি অর্ডার কনফার্ম করতে চাই। অর্ডার আইডি: #' + order.orderIdShort)}"
                  class="whatsapp-btn">
                 💬 WhatsApp এ যোগাযোগ করুন
               </a>

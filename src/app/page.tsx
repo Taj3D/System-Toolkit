@@ -17,12 +17,12 @@ import Link from 'next/link'
 const BUSINESS_INFO = {
   company: 'NextGen Digital Studio',
   facebook: 'https://www.facebook.com/nextgendigitalstudio',
-  phone: '+880 1973-135466',
-  whatsappNumber: '8801973135466',
-  email: 'fintaxedge01@gmail.com',
+  phone: '+880 1711-731354',
+  whatsappNumber: '8801711731354',
+  email: 'conceptbd.net@gmail.com',
   address: 'NewMarket, Jessore Sadar',
-  bkashNumber: '01973135466',
-  nagadNumber: '01973135466'
+  bkashNumber: '01711731354',
+  nagadNumber: '01711731354'
 }
 
 // ============ PRICING PLANS ============
