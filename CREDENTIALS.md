@@ -56,34 +56,44 @@ MX @ mail.resend.com (Priority: 10)
 
 | Field | Value |
 |-------|-------|
-| **Webhook URL** | `https://script.google.com/macros/s/AKfycbxtduCMu00-kLmAQtkbDT5re0HgWdUeBx-ZmXeQm6Hu9erdKMHDYVwvyENGiXwtNBIRfA/exec` |
+| **Webhook URL** | `https://script.google.com/macros/s/AKfycbxy7XUrQOYJdwT6pPNWJLezeXIjoQ_hMqeZz2QfOLVzU6jvK3Bw3w9ekDSnOzZ_NA3BBw/exec` |
+| **Google Sheet ID** | `1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU` |
+| **Sheet URL** | https://docs.google.com/spreadsheets/d/1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU/edit |
 | **Status** | ✅ Working |
 | **Sheet Columns** | Timestamp, Order ID, Name, Mobile, Email, Plan, Amount, Status |
 
-### Google Apps Script Code:
+### Google Apps Script Code (Version 3):
 ```javascript
+var SHEET_ID = '1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU';
+
 function doPost(e) {
   try {
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
     var data = JSON.parse(e.postData.contents);
     sheet.appendRow([
-      data.timestamp,
-      data.orderId,
-      data.name,
-      data.mobile,
-      data.email,
-      data.plan,
-      data.amount,
-      data.status
+      data.timestamp || new Date().toISOString(),
+      data.orderId || '',
+      data.name || '',
+      data.mobile || '',
+      data.email || '',
+      data.plan || '',
+      data.amount || 0,
+      data.status || 'pending'
     ]);
     return ContentService.createTextOutput(
-      JSON.stringify({success: true, message: 'Order saved'})
+      JSON.stringify({success: true, message: 'Order saved to sheet'})
     ).setMimeType(ContentService.MimeType.JSON);
   } catch (error) {
     return ContentService.createTextOutput(
       JSON.stringify({success: false, error: error.toString()})
     ).setMimeType(ContentService.MimeType.JSON);
   }
+}
+
+function doGet(e) {
+  return ContentService.createTextOutput(
+    JSON.stringify({success: true, message: 'Google Sheets Webhook is working!'})
+  ).setMimeType(ContentService.MimeType.JSON);
 }
 ```
 
@@ -158,7 +168,7 @@ model Order {
 
 ### Required for Vercel:
 ```
-GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/AKfycbxtduCMu00-kLmAQtkbDT5re0HgWdUeBx-ZmXeQm6Hu9erdKMHDYVwvyENGiXwtNBIRfA/exec
+GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/AKfycbxy7XUrQOYJdwT6pPNWJLezeXIjoQ_hMqeZz2QfOLVzU6jvK3Bw3w9ekDSnOzZ_NA3BBw/exec
 RESEND_API_KEY=re_Gq333Hz1_68k6qaUExt32U5vPri1E43zv
 FB_ACCESS_TOKEN=EAAXExUUyB1QBRh9bA0s2Wslhsjmaru1h5hdzZBVXJ0kP6XyY7Sv4cJOw9rjZBtdb9QmxT73wJcZBeGSbGkZAkEFfJv9RZBy47T8qLl45ZCqBW45hZBZCdFwbFCt9LmgZAHSMNbGsaHjL1B13Ew63Lss8h06WPqVPlEBd8JT5ZB3PVheY67PMv5ZBUJKZB3rKrzqtAvZBKDQZDZD
 DATABASE_URL=file:./db/custom.db
@@ -192,9 +202,10 @@ DATABASE_URL=file:./db/custom.db
 ---
 
 ## 📅 LAST UPDATED
-- **Date**: 2025-06-06
+- **Date**: 2025-01-07 (Updated Google Sheets URL)
 - **Updated By**: Main Agent
 - **Status**: All integrations working ✅
+- **Test Result**: All 7 integrations verified on live site
 
 ---
 
