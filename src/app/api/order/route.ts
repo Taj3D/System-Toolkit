@@ -7,7 +7,8 @@ const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
 
 // ============ RESEND CONFIGURATION ============
 const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_Gq333Hz1_68k6qaUExt32U5vPri1E43zv';
-const EMAIL_FROM = process.env.EMAIL_FROM || 'onboarding@resend.dev';
+// Use onboarding@resend.dev for free tier (only sends to verified email)
+const EMAIL_FROM = 'onboarding@resend.dev';
 
 // Initialize Resend
 const resend = new Resend(RESEND_API_KEY);
@@ -221,27 +222,48 @@ async function sendWelcomeEmail(order: {
   plan: string;
   amount: number;
 }) {
-  if (!order.email) {
-    console.log('⚠️ No email provided, skipping customer email');
-    return false;
-  }
-
-  console.log(`📧 Sending email to customer: ${order.email}`);
+  console.log(`📧 Sending order notification to admin...`);
   const orderIdShort = order.id.slice(-8).toUpperCase();
+  const planName = PLAN_NAMES[order.plan] || order.plan;
 
   try {
+    // For free tier: send to admin email (verified), include customer details in content
     const { data, error } = await resend.emails.send({
       from: `System Toolkit <${EMAIL_FROM}>`,
-      to: [order.email],
-      subject: `🎉 অর্ডার সফল - System Toolkit (#${orderIdShort})`,
-      html: getCustomerEmailHtml({
-        name: order.name,
-        mobile: order.mobile,
-        email: order.email,
-        plan: order.plan,
-        amount: order.amount,
-        orderIdShort
-      })
+      to: ['conceptbd.net@gmail.com'],
+      subject: `🔔 নতুন অর্ডার - #${orderIdShort} (${planName} - ৳${order.amount})`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5;">
+          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 30px;">
+            <h1 style="color: #10b981;">🎉 নতুন অর্ডার এসেছে!</h1>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0;">
+              <h3>📦 অর্ডার তথ্য</h3>
+              <p><strong>অর্ডার আইডি:</strong> #${orderIdShort}</p>
+              <p><strong>প্ল্যান:</strong> ${planName}</p>
+              <p><strong>মূল্য:</strong> <span style="color: #10b981; font-size: 24px;">৳${order.amount}</span></p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0;">
+              <h3>👤 গ্রাহক তথ্য</h3>
+              <p><strong>নাম:</strong> ${order.name}</p>
+              <p><strong>মোবাইল:</strong> ${order.mobile}</p>
+              <p><strong>ইমেইল:</strong> ${order.email || 'N/A'}</p>
+            </div>
+            
+            <p style="text-align: center;">
+              <a href="https://wa.me/88${order.mobile}?text=${encodeURIComponent('হ্যালো, আপনার অর্ডার #' + orderIdShort + ' এর জন্য যোগাযোগ করছি।')}"
+                 style="background: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">
+                💬 WhatsApp এ যোগাযোগ করুন
+              </a>
+            </p>
+          </div>
+        </body>
+        </html>
+      `
     });
 
     if (error) {
@@ -250,10 +272,11 @@ async function sendWelcomeEmail(order: {
       return false;
     }
 
-    console.log('✅ Welcome email sent! ID:', data?.id);
+    console.log('✅ Order notification sent! ID:', data?.id);
     return true;
   } catch (error) {
     console.error('⚠️ Email error:', error);
+    lastEmailError = error;
     return false;
   }
 }
@@ -349,21 +372,8 @@ export async function POST(request: NextRequest) {
       createdAt: orderDate
     });
 
-    // Send welcome email to customer
-    let emailSent = false;
-    if (email) {
-      emailSent = await sendWelcomeEmail({
-        id: orderId,
-        name,
-        mobile,
-        email,
-        plan,
-        amount
-      });
-    }
-
-    // Send admin notification
-    await sendAdminNotification({
+    // Send order notification to admin
+    const emailSent = await sendWelcomeEmail({
       id: orderId,
       name,
       mobile,
