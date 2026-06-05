@@ -1,222 +1,148 @@
-# 🔐 SYSTEM TOOLKIT - CREDENTIALS & API KEYS
-## সংরক্ষিত তথ্য - NextGen Digital Studio
+# 🔐 SYSTEM TOOLKIT - CREDENTIALS & CONFIGURATION
+
+**Last Updated:** $(date)
+**Project:** System Toolkit Dashboard
+**Owner:** Md. Najmul Islam Taj (NextGen Digital Studio)
 
 ---
 
-## 📱 BUSINESS INFORMATION
+## 📊 GOOGLE SHEETS CONFIGURATION
 
-| Field | Value |
-|-------|-------|
-| **Company** | NextGen Digital Studio |
-| **Founder & CEO** | Md. Najmul Islam Taj |
-| **Phone** | +880 1711-731354 |
-| **WhatsApp** | 8801711731354 |
-| **Email** | conceptbd.net@gmail.com |
-| **Address** | NewMarket, Jessore Sadar, Bangladesh |
-| **Facebook** | https://www.facebook.com/nextgendigitalstudio |
-| **bKash/Nagad** | 01711731354 |
-
----
-
-## 🌐 DOMAIN & HOSTING
-
-| Field | Value |
-|-------|-------|
-| **Domain** | nextgendigitalstudio.com |
-| **Purchased From** | Spaceship ($9.08/year) |
-| **Hosting** | Vercel (Free Tier) |
-| **Live URL** | https://system-toolkit.vercel.app |
-| **Dashboard** | https://system-toolkit.vercel.app/dashboard |
-| **GitHub** | https://github.com/Taj3D/System-Toolkit |
-
----
-
-## 📧 EMAIL SERVICE (Resend)
-
-| Field | Value |
-|-------|-------|
-| **Provider** | Resend (resend.com) |
-| **API Key** | `re_Gq333Hz1_68k6qaUExt32U5vPri1E43zv` |
-| **Sender Email** | noreply@nextgendigitalstudio.com |
-| **Verified Domain** | nextgendigitalstudio.com |
-| **DKIM Status** | ✅ Verified |
-| **SPF Status** | ✅ Verified |
-| **Free Tier** | 3,000 emails/month, 100 emails/day |
-
-### DNS Records for Email:
-```
-TXT @ v=spf1 include:spf.resend.com ~all
-TXT resend._domainkey p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCbN/aNBP/9fAvq...
-MX @ mail.resend.com (Priority: 10)
-```
-
----
-
-## 📊 GOOGLE SHEETS WEBHOOK
-
-| Field | Value |
-|-------|-------|
-| **Webhook URL** | `https://script.google.com/macros/s/AKfycbxy7XUrQOYJdwT6pPNWJLezeXIjoQ_hMqeZz2QfOLVzU6jvK3Bw3w9ekDSnOzZ_NA3BBw/exec` |
+| Item | Value |
+|------|-------|
 | **Google Sheet ID** | `1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU` |
-| **Sheet URL** | https://docs.google.com/spreadsheets/d/1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU/edit |
-| **Status** | ✅ Working |
-| **Sheet Columns** | Timestamp, Order ID, Name, Mobile, Email, Plan, Amount, Status |
+| **Google Sheet URL** | https://docs.google.com/spreadsheets/d/1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU/edit |
+| **Webhook URL** | `https://script.google.com/macros/s/AKfycbxy7XUrQOYJdwT6pPNWJLezeXIjoQ_hMqeZz2QfOLVzU6jvK3Bw3w9ekDSnOzZ_NA3BBw/exec` |
+| **Status** | ⚠️ **NEEDS RE-DEPLOYMENT** |
 
-### Google Apps Script Code (Version 3):
-```javascript
-var SHEET_ID = '1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU';
-
-function doPost(e) {
-  try {
-    var sheet = SpreadsheetApp.openById(SHEET_ID).getActiveSheet();
-    var data = JSON.parse(e.postData.contents);
-    sheet.appendRow([
-      data.timestamp || new Date().toISOString(),
-      data.orderId || '',
-      data.name || '',
-      data.mobile || '',
-      data.email || '',
-      data.plan || '',
-      data.amount || 0,
-      data.status || 'pending'
-    ]);
-    return ContentService.createTextOutput(
-      JSON.stringify({success: true, message: 'Order saved to sheet'})
-    ).setMimeType(ContentService.MimeType.JSON);
-  } catch (error) {
-    return ContentService.createTextOutput(
-      JSON.stringify({success: false, error: error.toString()})
-    ).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doGet(e) {
-  return ContentService.createTextOutput(
-    JSON.stringify({success: true, message: 'Google Sheets Webhook is working!'})
-  ).setMimeType(ContentService.MimeType.JSON);
-}
-```
+### Google Sheets Setup Instructions:
+1. Go to https://script.google.com
+2. Create new project
+3. Copy code from `google-apps-script-code.js`
+4. Deploy as Web App (Anyone can access)
+5. Update webhook URL in `.env` file
 
 ---
 
-## 📘 FACEBOOK PIXELS
+## 📧 RESEND EMAIL CONFIGURATION
 
-### Pixel IDs:
-| Pixel ID | Purpose |
-|----------|---------|
-| `918051034554872` | Primary Pixel |
-| `1317407319827782` | Secondary Pixel |
-| `1055888723429361` | Main + Conversions API |
+| Item | Value |
+|------|-------|
+| **API Key** | `re_Gq333Hz1_68k6qaUExt32U5vPri1E43zv` |
+| **Verified Domain** | `nextgendigitalstudio.com` |
+| **From Email** | `noreply@nextgendigitalstudio.com` |
+| **Status** | ✅ Working |
 
-### Conversions API (Pixel: 1055888723429361):
-| Field | Value |
-|-------|-------|
-| **Pixel ID** | `1055888723429361` |
+### Email Settings:
+- ✅ Customer email only (no admin email)
+- ✅ HTML email template with order details
+- ✅ WhatsApp link included
+
+---
+
+## 📘 FACEBOOK PIXEL CONFIGURATION
+
+| Pixel Name | Pixel ID | Status |
+|------------|----------|--------|
+| **Pixel 1** | `918051034554872` | ✅ Active |
+| **Pixel 2** | `1317407319827782` | ✅ Active |
+| **Pixel 3** | `1055888723429361` | ✅ Active (Conversions API) |
+
+### Facebook Conversions API:
+| Item | Value |
+|------|-------|
+| **Primary Pixel ID** | `1055888723429361` |
 | **Access Token** | `EAAXExUUyB1QBRh9bA0s2Wslhsjmaru1h5hdzZBVXJ0kP6XyY7Sv4cJOw9rjZBtdb9QmxT73wJcZBeGSbGkZAkEFfJv9RZBy47T8qLl45ZCqBW45hZBZCdFwbFCt9LmgZAHSMNbGsaHjL1B13Ew63Lss8h06WPqVPlEBd8JT5ZB3PVheY67PMv5ZBUJKZB3rKrzqtAvZBKDQZDZD` |
 | **API Version** | v18.0 |
-| **Events Tracked** | PageView, InitiateCheckout, AddPaymentInfo, Purchase |
 
-### Events Setup:
-- **Browser-side**: PageView, InitiateCheckout, AddPaymentInfo, Lead
-- **Server-side (Conversions API)**: Purchase
-- **Deduplication**: Unique eventId matching
-
----
-
-## 🔐 DASHBOARD PASSWORDS
-
-| Password | Purpose |
-|----------|---------|
-| `admin123` | Default admin password |
-| `nextgen2025` | NextGen Digital Studio password |
-| `toolkit@123` | Toolkit password |
-| `secure#pass` | Secure password |
-| `master@key` | Master key password |
-
-**Session Timeout**: 30 minutes
+### Events Tracked:
+- PageView
+- Lead
+- InitiateCheckout
+- AddPaymentInfo
+- Purchase (Server-side via Conversions API)
 
 ---
 
-## 🗄️ DATABASE
+## 📱 WHATSAPP INTEGRATION
 
-| Field | Value |
-|-------|-------|
-| **Type** | SQLite |
-| **File Path** | `/db/custom.db` |
-| **ORM** | Prisma |
-| **Models** | User, Post, Order |
-
-### Order Model:
-```prisma
-model Order {
-  id            String   @id @default(cuid())
-  name          String
-  mobile        String
-  email         String?
-  plan          String
-  amount        Int
-  status        String   @default("pending")
-  paymentMethod String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-}
-```
+| Item | Value |
+|------|-------|
+| **WhatsApp Number** | `+880 1711-731354` |
+| **WhatsApp Link** | https://wa.me/8801711731354 |
 
 ---
 
-## ⚙️ ENVIRONMENT VARIABLES
+## 💳 PAYMENT INFORMATION
 
-### Required for Vercel:
-```
-GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/AKfycbxy7XUrQOYJdwT6pPNWJLezeXIjoQ_hMqeZz2QfOLVzU6jvK3Bw3w9ekDSnOzZ_NA3BBw/exec
+| Item | Value |
+|------|-------|
+| **bKash Number** | `01711731354` |
+| **Nagad Number** | `01711731354` |
+
+---
+
+## 🌐 DEPLOYMENT INFORMATION
+
+| Item | Value |
+|------|-------|
+| **GitHub Repository** | https://github.com/Taj3D/System-Toolkit |
+| **Live URL (Landing)** | https://system-toolkit.vercel.app |
+| **Live URL (Dashboard)** | https://system-toolkit.vercel.app/dashboard |
+
+---
+
+## 🏢 BUSINESS INFORMATION
+
+| Item | Value |
+|------|-------|
+| **Company Name** | NextGen Digital Studio |
+| **Owner** | Md. Najmul Islam Taj |
+| **Facebook** | https://www.facebook.com/nextgendigitalstudio |
+| **Phone** | +880 1711-731354 |
+| **Email** | conceptbd.net@gmail.com |
+| **Address** | NewMarket, Jessore Sadar |
+
+---
+
+## 📋 PRICING PLANS
+
+| Plan | Price | Original | Features |
+|------|-------|----------|----------|
+| **বেসিক** | ৳299 | ৳599 | 115+ Tools, Windows, 3 Months Update |
+| **প্রফেশনাল** | ৳499 | ৳999 | 115+ Tools, All Platforms, 1 Year Update, Tutorials |
+| **এন্টারপ্রাইজ** | ৳999 | ৳1999 | All Features, Lifetime Update, Unlimited Devices, 24/7 Support |
+| **স্পেশাল অফার** | ৳199 | ৳599 | 115+ Tools, Windows, 7 Days Trial, Email Support |
+
+---
+
+## ⚠️ IMPORTANT NOTES
+
+1. **Google Sheets Webhook** - Currently showing "Page not found". Needs re-deployment.
+2. **Email** - Only sent to customer, not to admin.
+3. **Database** - Using SQLite (not persistent on Vercel serverless).
+4. **Facebook Pixels** - 3 pixels installed for maximum tracking.
+
+---
+
+## 🔧 ENVIRONMENT VARIABLES
+
+Create `.env` file with these values:
+
+```env
+# Google Sheets
+GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/YOUR_NEW_DEPLOYMENT_URL/exec
+
+# Resend Email
 RESEND_API_KEY=re_Gq333Hz1_68k6qaUExt32U5vPri1E43zv
+
+# Facebook
 FB_ACCESS_TOKEN=EAAXExUUyB1QBRh9bA0s2Wslhsjmaru1h5hdzZBVXJ0kP6XyY7Sv4cJOw9rjZBtdb9QmxT73wJcZBeGSbGkZAkEFfJv9RZBy47T8qLl45ZCqBW45hZBZCdFwbFCt9LmgZAHSMNbGsaHjL1B13Ew63Lss8h06WPqVPlEBd8JT5ZB3PVheY67PMv5ZBUJKZB3rKrzqtAvZBKDQZDZD
-DATABASE_URL=file:./db/custom.db
+
+# Database
+DATABASE_URL="file:./dev.db"
 ```
 
 ---
 
-## 📁 IMPORTANT FILES
-
-| File | Purpose |
-|------|---------|
-| `/src/app/page.tsx` | Landing page with order form |
-| `/src/app/dashboard/page.tsx` | Dashboard with 115+ tools |
-| `/src/app/api/order/route.ts` | Order API (all integrations) |
-| `/src/app/api/facebook-event/route.ts` | Facebook Conversions API |
-| `/prisma/schema.prisma` | Database schema |
-| `/.env` | Environment variables |
-| `/worklog.md` | Project documentation |
-
----
-
-## 📞 SUPPORT CONTACTS
-
-| Service | Contact |
-|---------|---------|
-| **Resend Support** | support@resend.com |
-| **Facebook Business** | business.facebook.com |
-| **Vercel Support** | vercel.com/support |
-| **Google Sheets** | support.google.com |
-
----
-
-## 📅 LAST UPDATED
-- **Date**: 2025-01-07 (Updated Google Sheets URL)
-- **Updated By**: Main Agent
-- **Status**: All integrations working ✅
-- **Test Result**: All 7 integrations verified on live site
-
----
-
-## ⚠️ SECURITY NOTES
-
-1. **Never commit** `.env` file to GitHub (already in .gitignore)
-2. **Rotate API keys** periodically for security
-3. **Facebook Access Token** expires - needs refresh
-4. **Resend API Key** should be kept secret
-5. **Dashboard passwords** can be changed in `/src/app/dashboard/page.tsx`
-
----
-
-*This file contains sensitive information. Keep it secure and do not share publicly.*
+*This file contains sensitive information. Keep it secure and do not commit to public repositories.*
