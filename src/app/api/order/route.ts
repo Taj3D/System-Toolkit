@@ -4,7 +4,9 @@ import { db } from '@/lib/db';
 import crypto from 'crypto';
 
 // ============ GOOGLE SHEETS CONFIGURATION ============
-const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
+// Hardcoded fallback URL for Google Sheets Webhook
+const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || 
+  'https://script.google.com/macros/s/AKfycbxtduCMu00-kLmAQtkbDT5re0HgWdUeBx-ZmXeQm6Hu9erdKMHDYVwvyENGiXwtNBIRfA/exec';
 
 // ============ RESEND CONFIGURATION ============
 const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_Gq333Hz1_68k6qaUExt32U5vPri1E43zv';
