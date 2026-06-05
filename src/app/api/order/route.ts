@@ -7,7 +7,8 @@ const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || '';
 
 // ============ RESEND CONFIGURATION ============
 const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_Gq333Hz1_68k6qaUExt32U5vPri1E43zv';
-// Use onboarding@resend.dev for free tier (only sends to verified email)
+// For sending to any customer: verify your domain at resend.com/domains
+// Then update EMAIL_FROM to your verified domain email
 const EMAIL_FROM = 'onboarding@resend.dev';
 
 // Initialize Resend
@@ -69,7 +70,7 @@ async function sendToGoogleSheets(order: {
   }
 }
 
-// ============ EMAIL HTML TEMPLATES ============
+// ============ CUSTOMER EMAIL HTML ============
 function getCustomerEmailHtml(order: { name: string; mobile: string; email: string; plan: string; amount: number; orderIdShort: string }) {
   const planName = PLAN_NAMES[order.plan] || order.plan;
   
@@ -161,60 +162,10 @@ function getCustomerEmailHtml(order: { name: string; mobile: string; email: stri
   `;
 }
 
-function getAdminEmailHtml(order: { name: string; mobile: string; email: string | null; plan: string; amount: number; orderIdShort: string }) {
-  const planName = PLAN_NAMES[order.plan] || order.plan;
-  
-  return `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 30px; }
-        .header { background: #1a1a2e; color: white; padding: 20px; border-radius: 12px; text-align: center; margin-bottom: 20px; }
-        .info-box { background: #f8f9fa; border-radius: 12px; padding: 20px; margin: 15px 0; }
-        .info-row { padding: 8px 0; border-bottom: 1px solid #eee; }
-        .info-row:last-child { border-bottom: none; }
-        .highlight { color: #10b981; font-weight: bold; font-size: 24px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="header">
-          <h1>🔔 নতুন অর্ডার এসেছে!</h1>
-        </div>
-        
-        <div class="info-box">
-          <h3>📦 অর্ডার তথ্য</h3>
-          <div class="info-row"><strong>অর্ডার আইডি:</strong> #${order.orderIdShort}</div>
-          <div class="info-row"><strong>প্ল্যান:</strong> ${planName}</div>
-          <div class="info-row"><strong>মূল্য:</strong> <span class="highlight">৳${order.amount}</span></div>
-        </div>
-        
-        <div class="info-box">
-          <h3>👤 গ্রাহক তথ্য</h3>
-          <div class="info-row"><strong>নাম:</strong> ${order.name}</div>
-          <div class="info-row"><strong>মোবাইল:</strong> ${order.mobile}</div>
-          <div class="info-row"><strong>ইমেইল:</strong> ${order.email || 'N/A'}</div>
-        </div>
-        
-        <p style="text-align: center; margin-top: 20px;">
-          <a href="https://wa.me/88${order.mobile}?text=${encodeURIComponent('হ্যালো, আপনার অর্ডার #' + order.orderIdShort + ' এর জন্য যোগাযোগ করছি।')}"
-             style="background: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">
-            💬 WhatsApp এ যোগাযোগ করুন
-          </a>
-        </p>
-      </div>
-    </body>
-    </html>
-  `;
-}
-
-// ============ EMAIL FUNCTIONS (RESEND) ============
+// ============ EMAIL FUNCTION - SEND TO CUSTOMER ============
 let lastEmailError: any = null;
 
-async function sendWelcomeEmail(order: {
+async function sendCustomerEmail(order: {
   id: string;
   name: string;
   mobile: string;
@@ -222,85 +173,21 @@ async function sendWelcomeEmail(order: {
   plan: string;
   amount: number;
 }) {
-  console.log(`📧 Sending order notification to admin...`);
-  const orderIdShort = order.id.slice(-8).toUpperCase();
-  const planName = PLAN_NAMES[order.plan] || order.plan;
-
-  try {
-    // For free tier: send to admin email (verified), include customer details in content
-    const { data, error } = await resend.emails.send({
-      from: `System Toolkit <${EMAIL_FROM}>`,
-      to: ['conceptbd.net@gmail.com'],
-      subject: `🔔 নতুন অর্ডার - #${orderIdShort} (${planName} - ৳${order.amount})`,
-      html: `
-        <!DOCTYPE html>
-        <html>
-        <head><meta charset="UTF-8"></head>
-        <body style="font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5;">
-          <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; padding: 30px;">
-            <h1 style="color: #10b981;">🎉 নতুন অর্ডার এসেছে!</h1>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0;">
-              <h3>📦 অর্ডার তথ্য</h3>
-              <p><strong>অর্ডার আইডি:</strong> #${orderIdShort}</p>
-              <p><strong>প্ল্যান:</strong> ${planName}</p>
-              <p><strong>মূল্য:</strong> <span style="color: #10b981; font-size: 24px;">৳${order.amount}</span></p>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; margin: 20px 0;">
-              <h3>👤 গ্রাহক তথ্য</h3>
-              <p><strong>নাম:</strong> ${order.name}</p>
-              <p><strong>মোবাইল:</strong> ${order.mobile}</p>
-              <p><strong>ইমেইল:</strong> ${order.email || 'N/A'}</p>
-            </div>
-            
-            <p style="text-align: center;">
-              <a href="https://wa.me/88${order.mobile}?text=${encodeURIComponent('হ্যালো, আপনার অর্ডার #' + orderIdShort + ' এর জন্য যোগাযোগ করছি।')}"
-                 style="background: #25D366; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">
-                💬 WhatsApp এ যোগাযোগ করুন
-              </a>
-            </p>
-          </div>
-        </body>
-        </html>
-      `
-    });
-
-    if (error) {
-      console.error('⚠️ Resend error:', error);
-      lastEmailError = error;
-      return false;
-    }
-
-    console.log('✅ Order notification sent! ID:', data?.id);
-    return true;
-  } catch (error) {
-    console.error('⚠️ Email error:', error);
-    lastEmailError = error;
+  if (!order.email) {
+    console.log('⚠️ No customer email provided');
     return false;
   }
-}
 
-// ============ ADMIN NOTIFICATION EMAIL ============
-async function sendAdminNotification(order: {
-  id: string;
-  name: string;
-  mobile: string;
-  email: string | null;
-  plan: string;
-  amount: number;
-}) {
+  console.log(`📧 Sending email to customer: ${order.email}`);
   const orderIdShort = order.id.slice(-8).toUpperCase();
   const planName = PLAN_NAMES[order.plan] || order.plan;
 
-  console.log('📧 Sending admin notification...');
-
   try {
     const { data, error } = await resend.emails.send({
-      from: `System Toolkit Orders <${EMAIL_FROM}>`,
-      to: ['conceptbd.net@gmail.com'],
-      subject: `🔔 নতুন অর্ডার - #${orderIdShort} (${planName} - ৳${order.amount})`,
-      html: getAdminEmailHtml({
+      from: `System Toolkit <${EMAIL_FROM}>`,
+      to: [order.email],
+      subject: `🎉 অর্ডার সফল - System Toolkit (#${orderIdShort})`,
+      html: getCustomerEmailHtml({
         name: order.name,
         mobile: order.mobile,
         email: order.email,
@@ -311,14 +198,16 @@ async function sendAdminNotification(order: {
     });
 
     if (error) {
-      console.error('⚠️ Admin notification error:', error);
+      console.error('⚠️ Resend error:', error);
+      lastEmailError = error;
       return false;
     }
 
-    console.log('✅ Admin notification sent! ID:', data?.id);
+    console.log('✅ Customer email sent! ID:', data?.id);
     return true;
   } catch (error) {
-    console.error('⚠️ Admin notification error:', error);
+    console.error('⚠️ Email error:', error);
+    lastEmailError = error;
     return false;
   }
 }
@@ -372,15 +261,18 @@ export async function POST(request: NextRequest) {
       createdAt: orderDate
     });
 
-    // Send order notification to admin
-    const emailSent = await sendWelcomeEmail({
-      id: orderId,
-      name,
-      mobile,
-      email: email || null,
-      plan,
-      amount
-    });
+    // Send email to customer
+    let emailSent = false;
+    if (email) {
+      emailSent = await sendCustomerEmail({
+        id: orderId,
+        name,
+        mobile,
+        email,
+        plan,
+        amount
+      });
+    }
 
     return NextResponse.json({
       success: true,
@@ -388,7 +280,8 @@ export async function POST(request: NextRequest) {
       message: 'Order created successfully',
       emailSent,
       googleSheetsSync: sheetsSync,
-      dbSaved
+      dbSaved,
+      emailError: lastEmailError
     });
 
   } catch (error) {
