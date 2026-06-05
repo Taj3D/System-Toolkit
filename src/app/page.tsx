@@ -17,12 +17,12 @@ import Link from 'next/link'
 const BUSINESS_INFO = {
   company: 'NextGen Digital Studio',
   facebook: 'https://www.facebook.com/nextgendigitalstudio',
-  phone: '+880 1711-731354',
-  whatsappNumber: '8801711731354',
-  email: 'conceptbd.net@gmail.com',
+  phone: '+880 1973-135466',
+  whatsappNumber: '8801973135466',
+  email: 'fintaxedge01@gmail.com',
   address: 'NewMarket, Jessore Sadar',
-  bkashNumber: '01711731354',
-  nagadNumber: '01711731354'
+  bkashNumber: '01973135466',
+  nagadNumber: '01973135466'
 }
 
 // ============ PRICING PLANS ============
@@ -186,17 +186,21 @@ export default function LandingPage() {
 
   return (
     <>
-      {/* Meta Pixel Code - Pixel ID: 1055888723429361 */}
+      {/* Meta Pixel Code - 3 Pixels */}
       <script
         dangerouslySetInnerHTML={{
           __html: `
             !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');
+            fbq('init', '918051034554872');
+            fbq('init', '1317407319827782');
             fbq('init', '1055888723429361');
             fbq('track', 'PageView');
           `
         }}
       />
       <noscript>
+        <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=918051034554872&ev=PageView&noscript=1" alt="" />
+        <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=1317407319827782&ev=PageView&noscript=1" alt="" />
         <img height="1" width="1" style={{display:'none'}} src="https://www.facebook.com/tr?id=1055888723429361&ev=PageView&noscript=1" alt="" />
       </noscript>
       {/* End Meta Pixel Code */}
