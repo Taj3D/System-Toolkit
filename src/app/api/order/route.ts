@@ -388,13 +388,7 @@ export async function POST(request: NextRequest) {
       message: 'Order created successfully',
       emailSent,
       googleSheetsSync: sheetsSync,
-      dbSaved,
-      debug: {
-        hasResendKey: !!RESEND_API_KEY,
-        emailFrom: EMAIL_FROM,
-        customerEmail: email || null,
-        lastError: lastEmailError
-      }
+      dbSaved
     });
 
   } catch (error) {
