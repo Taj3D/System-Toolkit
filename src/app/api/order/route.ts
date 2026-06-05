@@ -4,9 +4,9 @@ import { db } from '@/lib/db';
 import crypto from 'crypto';
 
 // ============ GOOGLE SHEETS CONFIGURATION ============
-// Updated Webhook URL - Version 4
+// NEW Sheet & Webhook - Version 1 (June 2026)
 const GOOGLE_SHEETS_WEBHOOK_URL = process.env.GOOGLE_SHEETS_WEBHOOK_URL || 
-  'https://script.google.com/macros/s/AKfycbyhCVa_okVaz8p18YbdfhBov6YJsMnUwY__WKaje-ZGoHQhFQcYivguvBaWLFH_vmdfAQ/exec';
+  'https://script.google.com/macros/s/AKfycby7evCwnp4jA4nY7gErjRBhTYjwCyXscE5IohzGJShZZt-EuTscBpiLDK-Hjpug7ZhF/exec';
 
 // ============ RESEND CONFIGURATION ============
 const RESEND_API_KEY = process.env.RESEND_API_KEY || 're_Gq333Hz1_68k6qaUExt32U5vPri1E43zv';

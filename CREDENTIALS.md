@@ -10,17 +10,15 @@
 
 | Item | Value |
 |------|-------|
-| **Google Sheet ID** | `1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU` |
-| **Google Sheet URL** | https://docs.google.com/spreadsheets/d/1N4eRRA0NkL9MsKC_dyZQhFJEQrWuRVRD8vxOGK9kZiU/edit |
-| **Webhook URL** | `https://script.google.com/macros/s/AKfycbxy7XUrQOYJdwT6pPNWJLezeXIjoQ_hMqeZz2QfOLVzU6jvK3Bw3w9ekDSnOzZ_NA3BBw/exec` |
-| **Status** | ⚠️ **NEEDS RE-DEPLOYMENT** |
+| **Google Sheet ID** | `1Sa5RxnkJM0VQW72VABhz_z7poGuFb52mD2iDF631EdQ` |
+| **Google Sheet URL** | https://docs.google.com/spreadsheets/d/1Sa5RxnkJM0VQW72VABhz_z7poGuFb52mD2iDF631EdQ/edit |
+| **Webhook URL** | `https://script.google.com/macros/s/AKfycby7evCwnp4jA4nY7gErjRBhTYjwCyXscE5IohzGJShZZt-EuTscBpiLDK-Hjpug7ZhF/exec` |
+| **Status** | ✅ **WORKING** (Version 1 - June 2026) |
 
-### Google Sheets Setup Instructions:
-1. Go to https://script.google.com
-2. Create new project
-3. Copy code from `google-apps-script-code.js`
-4. Deploy as Web App (Anyone can access)
-5. Update webhook URL in `.env` file
+### Google Sheets Setup:
+- ✅ New Sheet created
+- ✅ Apps Script deployed
+- ✅ Webhook tested and working
 
 ---
 
