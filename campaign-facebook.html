@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <title>Facebook Mega Sale Campaign - System Toolkit</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: 'Hind Siliguri', sans-serif; 
+      background: #0f172a; 
+      color: #fff;
+      padding: 40px;
+      line-height: 1.6;
+    }
+    
+    .container { max-width: 900px; margin: 0 auto; }
+    
+    .header { 
+      text-align: center; 
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6, #ec4899);
+      border-radius: 20px;
+      margin-bottom: 40px;
+    }
+    
+    .header h1 { 
+      font-size: 36px; 
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    }
+    
+    .header p { font-size: 18px; opacity: 0.9; }
+    
+    .section { 
+      background: #1e293b; 
+      border-radius: 16px; 
+      padding: 30px;
+      margin-bottom: 30px;
+      border: 1px solid #334155;
+    }
+    
+    .section h2 { 
+      color: #10b981; 
+      font-size: 24px; 
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #10b981;
+    }
+    
+    .section h3 { 
+      color: #60a5fa; 
+      font-size: 18px; 
+      margin: 20px 0 10px 0;
+    }
+    
+    .post-box {
+      background: #334155;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 15px 0;
+      border-left: 4px solid #ec4899;
+    }
+    
+    .post-box.viral { border-left-color: #f59e0b; }
+    .post-box.ad { border-left-color: #10b981; }
+    
+    .post-label {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    
+    .post-label.viral { background: #f59e0b; color: #000; }
+    .post-label.ad { background: #10b981; color: #000; }
+    .post-label.post { background: #ec4899; color: #fff; }
+    
+    .post-content {
+      font-size: 15px;
+      white-space: pre-wrap;
+      color: #e2e8f0;
+    }
+    
+    .hashtags {
+      color: #60a5fa;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+    
+    .highlight { 
+      background: linear-gradient(90deg, #f59e0b, #ef4444);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      font-weight: 700;
+    }
+    
+    .price-tag {
+      display: inline-block;
+      background: #10b981;
+      color: #fff;
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-weight: 700;
+    }
+    
+    .old-price {
+      text-decoration: line-through;
+      color: #94a3b8;
+    }
+    
+    .emoji { font-size: 20px; }
+    
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .stat-box {
+      background: #334155;
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .stat-number {
+      font-size: 32px;
+      font-weight: 700;
+      color: #10b981;
+    }
+    
+    .stat-label {
+      color: #94a3b8;
+      font-size: 14px;
+    }
+    
+    .cta-button {
+      display: inline-block;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      padding: 12px 30px;
+      border-radius: 50px;
+      font-weight: 700;
+      text-decoration: none;
+      margin: 10px 0;
+    }
+    
+    .warning-box {
+      background: #7c2d12;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #f59e0b;
+    }
+    
+    .tip-box {
+      background: #14532d;
+      border-radius: 12px;
+      padding: 15px;
+      margin: 10px 0;
+      border-left: 4px solid #10b981;
+    }
+    
+    .footer {
+      text-align: center;
+      padding: 30px;
+      color: #64748b;
+      font-size: 14px;
+    }
+    
+    @media print {
+      body { background: #fff; color: #000; }
+      .section { background: #f8fafc; border: 1px solid #e2e8f0; }
+      .post-box { background: #fff; }
+      .header { background: linear-gradient(135deg, #3b82f6, #8b5cf6); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🔥 FACEBOOK MEGA SALE CAMPAIGN 🔥</h1>
+      <p>System Toolkit - 115+ Professional Tools</p>
+      <p style="margin-top:10px;">NextGen Digital Studio</p>
+    </div>
+    
+    <!-- Campaign Overview -->
+    <div class="section">
+      <h2>📊 Campaign Overview</h2>
+      <div class="grid-2">
+        <div class="stat-box">
+          <div class="stat-number">50%</div>
+          <div class="stat-label">Discount Offer</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">115+</div>
+          <div class="stat-label">Tools Included</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">৳199-999</div>
+          <div class="stat-label">Price Range</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">5000+</div>
+          <div class="stat-label">Happy Customers</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Target Audience -->
+    <div class="section">
+      <h2>🎯 Target Audience</h2>
+      <div class="post-box">
+        <h3>Primary Audience:</h3>
+        <ul style="margin-left: 20px; color: #e2e8f0;">
+          <li>PC/Laptop Users (Windows, Mac, Linux)</li>
+          <li>Freelancers & Remote Workers</li>
+          <li>Small Business Owners</li>
+          <li>Students & Teachers</li>
+          <li>IT Professionals</li>
+          <li>Gamers & Content Creators</li>
+        </ul>
+        
+        <h3>Demographics:</h3>
+        <ul style="margin-left: 20px; color: #e2e8f0;">
+          <li>Age: 18-45 years</li>
+          <li>Location: Bangladesh</li>
+          <li>Interest: Technology, Software, Gaming</li>
+          <li>Income: Middle class</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Viral Posts -->
+    <div class="section">
+      <h2>🚀 Viral Posts (Organic)</h2>
+      
+      <!-- Post 1 -->
+      <div class="post-box viral">
+        <span class="post-label viral">🔥 VIRAL POST 1 - Emotional Hook</span>
+        <div class="post-content">
+🔥 আপনার PC কি স্লো হয়ে গেছে?
+
+ভাই, আমি জানি কত কষ্ট হয় যখন কাজের সময় PC হ্যাং করে! 😤
+
+গেম খেলতে গেলে LAG... 🎮
+ভিডিও এডিট করতে গেলে CRASH... 💥
+ফাইল কপি করতে ঘন্টা লাগে... 🐌
+
+আর নতুন PC কেনার টাকা নেই! 💸
+
+কিন্তু সমাধান আছে! ✅
+
+🛠️ System Toolkit - ১১৫+ প্রফেশনাল টুল
+
+✅ One-Click Optimization
+✅ Virus & Malware Cleaner
+✅ Speed Booster
+✅ Windows Activator
+✅ Driver Updater
+✅ Privacy Protector
+
+⏰ আজই ৫০% ছাড়!
+<span class="old-price">৳৫৯৯</span> → <span class="price-tag">মাত্র ৳২৯৯</span>
+
+🎁 Special Offer: ৳১৯৯ তে শুরু করুন!
+
+👇 এখনই অর্ডার করুন:
+🔗 https://system-toolkit.vercel.app
+
+💬 WhatsApp: 01711-731354
+        </div>
+        <div class="hashtags">
+#SystemToolkit #PCOptimization #ComputerTips #TechBangla #SoftwareBD #PCSpeed #WindowsTips #Bangladesh
+        </div>
+      </div>
+      
+      <!-- Post 2 -->
+      <div class="post-box viral">
+        <span class="post-label viral">🔥 VIRAL POST 2 - FOMO & Urgency</span>
+        <div class="post-content">
+⚡️ FLASH SALE - শুধু আজ! ⚡️
+
+🚨 মিস করলে আর পাবেন না!
+
+System Toolkit - ১১৫+ টুল
+<span class="old-price">মূল্য: ৳১৯৯৯</span>
+🎉 আজকের অফার: <span class="price-tag">মাত্র ৳৪৯৯!</span>
+
+কি পাবেন?
+✅ Windows Optimizer
+✅ Mac Cleaner
+✅ Android Tools
+✅ iOS Utilities
+✅ Linux Scripts
+✅ Lifetime Updates
+✅ 24/7 Support
+
+⏰ অফার শেষ হবে আজ রাত ১২টায়!
+
+🔥 ইতিমধ্যে ৫০০০+ ইউজার!
+
+👇 দেরি না করে অর্ডার করুন:
+🔗 https://system-toolkit.vercel.app
+
+📲 WhatsApp: 01711-731354
+        </div>
+        <div class="hashtags">
+#FlashSale #MegaOffer #TechDeal #SoftwareOffer #PCOptimization #BangladeshTech #BestDeal
+        </div>
+      </div>
+      
+      <!-- Post 3 -->
+      <div class="post-box viral">
+        <span class="post-label viral">🔥 VIRAL POST 3 - Social Proof</span>
+        <div class="post-content">
+📢 কাস্টমার রিভিউ দেখুন!
+
+⭐⭐⭐⭐⭐ রাকিবুল হাসান (ঢাকা)
+"আমার PC ২ বছর স্লো ছিল, ১ ঘন্টায় ঠিক হয়ে গেল! অসাধারণ!"
+
+⭐⭐⭐⭐⭐ ফাতেমা আক্তার (চট্টগ্রাম)
+"Windows activate ৫ মিনিটে হয়ে গেল। সাপোর্ট টিম খুবই হেল্পফুল!"
+
+⭐⭐⭐⭐⭐ মেহেদী হাসান (যশোর)
+"প্রফেশনাল টুলকিট! এত সুন্দর সফটওয়্যার আর দেখিনি!"
+
+🏆 মাত্র ৳২৯৯-তে পান ১১৫+ টুল!
+
+🔗 https://system-toolkit.vercel.app
+
+📲 01711-731354
+        </div>
+        <div class="hashtags">
+#CustomerReview #BestSoftware #TechReview #PCCleaner #Bangladesh #CustomerSatisfaction
+        </div>
+      </div>
+      
+      <!-- Post 4 -->
+      <div class="post-box viral">
+        <span class="post-label viral">🔥 VIRAL POST 4 - Problem-Solution</span>
+        <div class="post-content">
+😤 এই সমস্যাগুলো কি আপনার আছে?
+
+❌ PC স্লো হয়ে গেছে
+❌ Windows Activate নেই
+❌ Virus ঢুকে গেছে
+❌ ড্রাইভার মিসিং
+❌ হার্ড ডিস্ক ফুল
+❌ ইন্টারনেট স্লো
+❌ প্রাইভেসি রিস্ক
+
+✅ সব সমস্যার একটাই সমাধান!
+
+🛠️ System Toolkit
+
+🔧 ১১৫+ প্রফেশনাল টুল
+⚡ One-Click Fix
+🛡️ ১০০% নিরাপদ
+💰 মাত্র ৳১৯৯ থেকে শুরু
+
+🎁 আজই ৫০% ছাড়!
+
+👇 অর্ডার করুন:
+🔗 https://system-toolkit.vercel.app
+        </div>
+        <div class="hashtags">
+#PCProblem #WindowsFix #VirusRemoval #TechSolution #Bangladesh
+        </div>
+      </div>
+      
+      <!-- Post 5 - Story -->
+      <div class="post-box viral">
+        <span class="post-label viral">🔥 VIRAL POST 5 - Story Format</span>
+        <div class="post-content">
+📖 একটা গল্প বলি...
+
+রহিম ভাইয়ের PC ৩ বছরের পুরনো। কাজ করতে গেলে রাগ আসে! 😤
+
+নতুন PC কিনতে লাগবে ৫০,০০০+ টাকা! 💸
+
+কিন্তু রহিম ভাই আমার কাছে এলেন...
+
+🛠️ System Toolkit নিলেন - মাত্র ৳৪৯৯!
+
+আর এখন? 🤩
+✅ PC রকেটের মতো ফাস্ট!
+✅ Windows Genuine!
+✅ কোন Virus নেই!
+✅ সব Driver আপডেট!
+
+৫০,০০০ টাকা বাঁচালেন! 💰
+
+আপনিও বাঁচাতে চান?
+
+🔗 https://system-toolkit.vercel.app
+
+📲 01711-731354
+        </div>
+        <div class="hashtags">
+#PCTips #MoneySaving #TechHacks #BangladeshStory #RealStory
+        </div>
+      </div>
+    </div>
+    
+    <!-- Facebook Ads -->
+    <div class="section">
+      <h2>📢 Facebook Ad Copy</h2>
+      
+      <!-- Ad 1 -->
+      <div class="post-box ad">
+        <span class="post-label ad">🎯 AD COPY 1 - Awareness</span>
+        <div class="post-content">
+🎯 Headline: PC স্লো? এক ক্লিকে ফাস্ট করুন!
+
+📝 Primary Text:
+আপনার PC/Laptop কি স্লো হয়ে গেছে? 😟
+
+System Toolkit দিয়ে ১১৫+ প্রফেশনাল টুল পান এক প্যাকেজে!
+
+✅ PC Speed Booster
+✅ Virus Cleaner
+✅ Windows Activator
+✅ Driver Updater
+✅ Privacy Protector
+
+⏰ সীমিত সময়ের অফার - ৫০% ছাড়!
+<span class="old-price">৳৫৯৯</span> → <span class="price-tag">মাত্র ৳২৯৯</span>
+
+👇 এখনই অর্ডার করুন!
+
+🔗 Call to Action: অর্ডার করুন
+        </div>
+      </div>
+      
+      <!-- Ad 2 -->
+      <div class="post-box ad">
+        <span class="post-label ad">🎯 AD COPY 2 - Conversion</span>
+        <div class="post-content">
+🎯 Headline: ১১৫+ টুল মাত্র ৳১৯৯!
+
+📝 Primary Text:
+🔥 MEGA SALE চলছে!
+
+System Toolkit - সকল ডিভাইসের জন্য ১১৫+ প্রফেশনাল টুল!
+
+🎁 প্ল্যান সমূহ:
+• বেসিক - ৳২৯৯ (৳৫৯৯ থেকে)
+• প্রফেশনাল - ৳৪৯৯ (৳৯৯৯ থেকে)
+• এন্টারপ্রাইজ - ৳৯৯৯ (৳১৯৯৯ থেকে)
+• স্পেশাল অফার - মাত্র ৳১৯৯!
+
+✅ Windows, Mac, Linux, Android, iOS
+✅ লাইফটাইম আপডেট
+✅ ২৪/৭ সাপোর্ট
+
+⏰ অফার শেষ হবে আজ রাতে!
+
+🔗 Call to Action: এখনই কিনুন
+        </div>
+      </div>
+      
+      <!-- Ad 3 -->
+      <div class="post-box ad">
+        <span class="post-label ad">🎯 AD COPY 3 - Retargeting</span>
+        <div class="post-content">
+🎯 Headline: এখনো অর্ডার করেননি?
+
+📝 Primary Text:
+👋 ভাই, আপনি System Toolkit দেখেছেন কিন্তু অর্ডার করেননি!
+
+এখনো সময় আছে! ⏰
+
+🎁 Special Discount শুধু আপনার জন্য:
+<span class="old-price">৳৫৯৯</span> → <span class="price-tag">৳২৪৯</span>
+
+✅ ১১৫+ টুল
+✅ লাইফটাইম আপডেট
+✅ ইনস্ট্যান্ট ডেলিভারি
+✅ ৭ দিনের রিফান্ড
+
+🔗 Call to Action: অফার নিন
+        </div>
+      </div>
+      
+      <!-- Ad 4 -->
+      <div class="post-box ad">
+        <span class="post-label ad">🎯 AD COPY 4 - Video Ad Script</span>
+        <div class="post-content">
+🎬 Video Ad Script (30-60 seconds)
+
+[Opening - 5 sec]
+ভাই, আপনার PC কি এটা করে? 😤
+(Show slow PC, hanging, crashing)
+
+[Problem - 10 sec]
+গেম খেলতে গেলে LAG... 🎮
+কাজ করতে গেলে HANG... 💥
+নতুন PC কিনতে টাকা নেই! 💸
+
+[Solution - 15 sec]
+কিন্তু সমাধান আছে! ✅
+System Toolkit - ১১৫+ প্রফেশনাল টুল!
+(Show the toolkit in action, PC speeding up)
+
+[Offer - 10 sec]
+⏰ আজই ৫০% ছাড়!
+৳৫৯৯ → মাত্র ৳২৯৯!
+
+[CTA - 5 sec]
+👇 এখনই অর্ডার করুন!
+🔗 system-toolkit.vercel.app
+        </div>
+      </div>
+    </div>
+    
+    <!-- Campaign Strategy -->
+    <div class="section">
+      <h2>📅 Campaign Schedule</h2>
+      
+      <div class="post-box">
+        <h3>Week 1: Awareness Phase</h3>
+        <ul style="margin-left: 20px; color: #e2e8f0;">
+          <li>Day 1-2: Viral Post 1 (Emotional Hook)</li>
+          <li>Day 3-4: Viral Post 3 (Social Proof)</li>
+          <li>Day 5-7: Facebook Ad Copy 1 (Awareness)</li>
+        </ul>
+        
+        <h3>Week 2: Consideration Phase</h3>
+        <ul style="margin-left: 20px; color: #e2e8f0;">
+          <li>Day 1-2: Viral Post 4 (Problem-Solution)</li>
+          <li>Day 3-4: Viral Post 5 (Story)</li>
+          <li>Day 5-7: Facebook Ad Copy 2 (Conversion)</li>
+        </ul>
+        
+        <h3>Week 3: Conversion Phase</h3>
+        <ul style="margin-left: 20px; color: #e2e8f0;">
+          <li>Day 1-2: Viral Post 2 (FOMO)</li>
+          <li>Day 3-7: Facebook Ad Copy 3 (Retargeting)</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Budget -->
+    <div class="section">
+      <h2>💰 Recommended Budget</h2>
+      
+      <div class="grid-2">
+        <div class="stat-box">
+          <div class="stat-number">৳৫০০-১০০০</div>
+          <div class="stat-label">Daily Budget</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">৳১০,০০০+</div>
+          <div class="stat-label">Monthly Budget</div>
+        </div>
+      </div>
+      
+      <div class="tip-box" style="margin-top: 20px;">
+        <strong>💡 Pro Tip:</strong> Start with ৳৩০০-৫০০/day, analyze results, then scale up!
+      </div>
+    </div>
+    
+    <!-- Best Practices -->
+    <div class="section">
+      <h2>⭐ Best Practices</h2>
+      
+      <div class="tip-box">
+        <strong>✅ DO:</strong>
+        <ul style="margin-left: 20px;">
+          <li>Use Bangla language for better engagement</li>
+          <li>Post between 7 PM - 11 PM (peak hours)</li>
+          <li>Respond to comments within 1 hour</li>
+          <li>Use eye-catching images/videos</li>
+          <li>Create urgency with limited time offers</li>
+          <li>Share customer testimonials</li>
+        </ul>
+      </div>
+      
+      <div class="warning-box">
+        <strong>❌ DON'T:</strong>
+        <ul style="margin-left: 20px;">
+          <li>Don't post same content repeatedly</li>
+          <li>Don't ignore negative comments</li>
+          <li>Don't use too many hashtags (max 5-7)</li>
+          <li>Don't post during work hours (low engagement)</li>
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Contact Info -->
+    <div class="section">
+      <h2>📞 Contact Information</h2>
+      <div class="post-box">
+        <p><strong>Company:</strong> NextGen Digital Studio</p>
+        <p><strong>Founder:</strong> Md. Najmul Islam Taj</p>
+        <p><strong>Phone:</strong> +880 1711-731354</p>
+        <p><strong>Email:</strong> conceptbd.net@gmail.com</p>
+        <p><strong>Website:</strong> https://system-toolkit.vercel.app</p>
+        <p><strong>Facebook:</strong> https://www.facebook.com/nextgendigitalstudio</p>
+      </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+      <p>© 2025 NextGen Digital Studio</p>
+      <p>System Toolkit - Facebook Mega Sale Campaign</p>
+    </div>
+  </div>
+</body>
+</html>
