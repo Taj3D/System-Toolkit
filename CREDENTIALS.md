@@ -12,14 +12,15 @@
 |------|-------|
 | **Google Sheet ID** | `1Sa5RxnkJM0VQW72VABhz_z7poGuFb52mD2iDF631EdQ` |
 | **Google Sheet URL** | https://docs.google.com/spreadsheets/d/1Sa5RxnkJM0VQW72VABhz_z7poGuFb52mD2iDF631EdQ/edit |
-| **Webhook URL** | `https://script.google.com/macros/s/AKfycbwat_qAhK5aOfW67Pv9sUv2L6DyQwOY8f22v85i3aNYm7MhTzDJsshY10aEOXDVZhHM/exec` |
-| **Status** | ✅ **WORKING** (Version 2 - June 2026) |
+| **Sheet Name** | Sheet1 |
+| **Webhook URL** | `https://script.google.com/macros/s/AKfycbyEYLsx__ZxIjRJmjKlOPfD87jkHk6EoJiu4bmIXaNL722UAWils-iFitRHOXa-fJC2/exec` |
+| **Status** | ✅ **WORKING** (Version 4 - June 2026 - DATA CONFIRMED) |
 
 ### Google Sheets Setup:
-- ✅ New Sheet created
-- ✅ Apps Script deployed (Version 2)
-- ✅ Webhook tested and working
-- ✅ Data saving to Sheet confirmed
+- ✅ Sheet created with name "Sheet1"
+- ✅ Apps Script deployed from within the Sheet (Extensions > Apps Script)
+- ✅ Webhook tested and confirmed working
+- ✅ Data saving verified: Order VERSION4-1780704093 received
 
 ---
 
