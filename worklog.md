@@ -105,7 +105,7 @@
 | Service | Key/ID |
 |---------|--------|
 | Google Sheet ID | 1Sa5RxnkJM0VQW72VABhz_z7poGuFb52mD2iDF631EdQ |
-| Webhook URL | https://script.google.com/macros/s/AKfycby7evCwnp4jA4nY7gErjRBhTYjwCyXscE5IohzGJShZZt-EuTscBpiLDK-Hjpug7ZhF/exec |
+| Webhook URL | https://script.google.com/macros/s/AKfycbyEYLsx__ZxIjRJmjKlOPfD87jkHk6EoJiu4bmIXaNL722UAWils-iFitRHOXa-fJC2/exec |
 | Resend API Key | re_Gq333Hz1_68k6qaUExt32U5vPri1E43zv |
 | Facebook Pixel 1 | 918051034554872 |
 | Facebook Pixel 2 | 1317407319827782 |

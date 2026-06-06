@@ -14,7 +14,7 @@
 | **Google Sheet URL** | https://docs.google.com/spreadsheets/d/1Sa5RxnkJM0VQW72VABhz_z7poGuFb52mD2iDF631EdQ/edit |
 | **Sheet Name** | Sheet1 |
 | **Webhook URL** | `https://script.google.com/macros/s/AKfycbyEYLsx__ZxIjRJmjKlOPfD87jkHk6EoJiu4bmIXaNL722UAWils-iFitRHOXa-fJC2/exec` |
-| **Status** | ✅ **WORKING** (Version 4 - June 2026 - DATA CONFIRMED) |
+| **Status** | ✅ **WORKING** (Version 4 - June 2026 - Local Tested & Confirmed) |
 
 ### Google Sheets Setup:
 - ✅ Sheet created with name "Sheet1"
@@ -118,10 +118,11 @@
 
 ## ⚠️ IMPORTANT NOTES
 
-1. **Google Sheets Webhook** - Currently showing "Page not found". Needs re-deployment.
+1. **Google Sheets Webhook** - ✅ WORKING (Version 4 deployment - tested locally)
 2. **Email** - Only sent to customer, not to admin.
 3. **Database** - Using SQLite (not persistent on Vercel serverless).
 4. **Facebook Pixels** - 3 pixels installed for maximum tracking.
+5. **Vercel** - Need to update GOOGLE_SHEETS_WEBHOOK_URL environment variable in Vercel dashboard.
 
 ---
 
@@ -131,7 +132,7 @@ Create `.env` file with these values:
 
 ```env
 # Google Sheets
-GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/YOUR_NEW_DEPLOYMENT_URL/exec
+GOOGLE_SHEETS_WEBHOOK_URL=https://script.google.com/macros/s/AKfycbyEYLsx__ZxIjRJmjKlOPfD87jkHk6EoJiu4bmIXaNL722UAWils-iFitRHOXa-fJC2/exec
 
 # Resend Email
 RESEND_API_KEY=re_Gq333Hz1_68k6qaUExt32U5vPri1E43zv
